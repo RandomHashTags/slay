@@ -5,11 +5,13 @@ public struct Toggle {
     public var isOn:Bool
 
     public var frame:Rectangle
+    public var backgroundColor:Color?
 
     public init(
         _ text: Text,
         image: Image? = nil,
-        isOn: Bool
+        isOn: Bool,
+        backgroundColor: Color? = nil
     ) {
         self.text = text
         self.image = image
@@ -18,6 +20,7 @@ public struct Toggle {
             width: text.frame._width + (image?.frame._width ?? 0), // TODO: what should the toggle switch width be?
             height: max(text.frame._height, image?.frame._height ?? 0) // TODO: what should the toggle switch height be?
         )
+        self.backgroundColor = backgroundColor
     }
 }
 

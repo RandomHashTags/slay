@@ -2,8 +2,12 @@
 public struct List {
     public var data:[any View]
     public var frame:Rectangle
+    public var backgroundColor:Color?
 
-    public init(_ data: [any View]) {
+    public init(
+        _ data: [any View],
+        backgroundColor: Color? = nil
+    ) {
         self.data = data
 
         var width:Int32 = 0
@@ -15,6 +19,7 @@ public struct List {
             height += d.frame._height
         }
         frame = .init(width: width, height: height)
+        self.backgroundColor = backgroundColor
     }
 }
 

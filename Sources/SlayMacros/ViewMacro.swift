@@ -11,7 +11,10 @@ struct ViewMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         let structDecl = declaration.as(StructDeclSyntax.self)!
         let name = structDecl.name.text
-        var supportedStaticDimensions:[(width: Int32, height: Int32)] = [(1920, 1080)]
+        var supportedStaticDimensions:[(width: Int32, height: Int32)] = [
+            (1920, 1080),
+            (1280, 720)
+        ]
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
                 switch arg.label?.text {

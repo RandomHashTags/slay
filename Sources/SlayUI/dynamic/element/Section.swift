@@ -3,10 +3,12 @@ public struct Section {
     public var text:Text
     public var data:[any View]
     public var frame:Rectangle
+    public var backgroundColor:Color?
 
     public init(
         _ text: Text,
-        data: [any View]
+        data: [any View],
+        backgroundColor: Color? = nil
     ) {
         self.text = text
         self.data = data
@@ -23,6 +25,7 @@ public struct Section {
             width: width,
             height: height
         )
+        self.backgroundColor = backgroundColor
     }
 }
 

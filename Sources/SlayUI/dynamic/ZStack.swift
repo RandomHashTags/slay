@@ -2,8 +2,12 @@
 public struct ZStack {
     public var data:[any View]
     public var frame:Rectangle
+    public var backgroundColor:Color?
 
-    public init(_ data: [any View]) {
+    public init(
+        _ data: [any View],
+        backgroundColor: Color? = nil
+    ) {
         self.data = data
 
         var width:Int32 = 0
@@ -17,6 +21,7 @@ public struct ZStack {
             }
         }
         frame = .init(width: width, height: height)
+        self.backgroundColor = backgroundColor
     }
 }
 

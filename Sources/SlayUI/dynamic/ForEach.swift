@@ -2,9 +2,11 @@
 public struct ForEach<E: View> {
     public var data:[E]
     public var frame:Rectangle
+    public var backgroundColor:Color?
 
     public init(
-       data: [E]
+       _ data: [E],
+       backgroundColor: Color? = nil
     ) {
         self.data = data
 
@@ -19,6 +21,7 @@ public struct ForEach<E: View> {
             }
         }
         frame = .init(width: width, height: height)
+        self.backgroundColor = backgroundColor
     }
 }
 

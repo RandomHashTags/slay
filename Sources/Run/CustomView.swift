@@ -14,4 +14,8 @@ struct CustomView: View {
             Rectangle(width: 300, height: 300)
         ])
     }
+
+    var backgroundColor: Color? {
+        .rgba(255, 0, 0, 255)
+    }
 }

@@ -6,26 +6,37 @@ public struct Rectangle {
     package var y:Int32 = 0
     package var _width:Int32
     package var _height:Int32
+    public var backgroundColor:Color?
 
-    public init() {
+    public init(
+        backgroundColor: Color? = nil
+    ) {
         _width = 0
         _height = 0
+        self.backgroundColor = backgroundColor
     }
-    public init(width: Int32, height: Int32) {
+    public init(
+        width: Int32,
+        height: Int32,
+        backgroundColor: Color? = nil
+    ) {
         _width = width
         _height = height
+        self.backgroundColor = backgroundColor
     }
 
     public init(
         x: Int32,
         y: Int32,
         width: Int32,
-        height: Int32
+        height: Int32,
+        backgroundColor: Color? = nil
     ) {
         self.x = x
         self.y = y
         self._width = width
         self._height = height
+        self.backgroundColor = backgroundColor
     }
 }
 
