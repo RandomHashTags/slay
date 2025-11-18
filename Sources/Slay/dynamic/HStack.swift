@@ -14,6 +14,6 @@ extension HStack: Layoutable {
     }
 
     public var height: Int32 {
-        data.reduce(0, { $0 + $1.height })
+        data.min(by: { $0.height < $1.height })?.height ?? 0
     }
 }
