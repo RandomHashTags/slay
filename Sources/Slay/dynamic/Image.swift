@@ -1,9 +1,12 @@
 
 public struct Image {
-    public var path:String
+    var data:ImageData
 
-    public init(path: String) {
-        self.path = path
+    public init(_ path: String) {
+        data = .systemPath(path)
+    }
+    public init(_ bytes: [UInt8]) {
+        data = .bytes(bytes)
     }
 }
 
