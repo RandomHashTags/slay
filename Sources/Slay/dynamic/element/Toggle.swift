@@ -15,8 +15,8 @@ public struct Toggle {
     }
 }
 
-// MARK: Layoutable
-extension Toggle: Layoutable {
+// MARK: View
+extension Toggle: View {
     public var width: Int32 {
         text.width + (image?.width ?? 0) // TODO: what should the toggle switch width be?
     }

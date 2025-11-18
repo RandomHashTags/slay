@@ -10,8 +10,8 @@ public struct Image {
     }
 }
 
-// MARK: Layoutable
-extension Image: Layoutable {
+// MARK: View
+extension Image: View {
     public var width: Int32 {
         0 // TODO: fix
     }

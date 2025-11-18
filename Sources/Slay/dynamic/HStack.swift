@@ -1,14 +1,14 @@
 
 public struct HStack {
-    public var data:[any Layoutable]
+    public var data:[any View]
 
-    public init(_ data: [any Layoutable]) {
+    public init(_ data: [any View]) {
         self.data = data
     }
 }
 
-// MARK: Layoutable
-extension HStack: Layoutable {
+// MARK: View
+extension HStack: View {
     public var width: Int32 {
         data.reduce(0, { $0 + $1.width })
     }

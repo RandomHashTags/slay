@@ -12,8 +12,8 @@ public struct Text {
     }
 }
 
-// MARK: Layoutable
-extension Text: Layoutable {
+// MARK: View
+extension Text: View {
     public var width: Int32 {
         0 // TODO: fix
     }

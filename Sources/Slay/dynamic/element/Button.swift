@@ -7,8 +7,8 @@ public struct Button {
     }
 }
 
-// MARK: Layoutable
-extension Button: Layoutable {
+// MARK: View
+extension Button: View {
     public var width: Int32 {
         label.width
     }

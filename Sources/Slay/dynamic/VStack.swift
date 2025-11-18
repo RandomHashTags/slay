@@ -1,14 +1,14 @@
 
 public struct VStack {
-    public var data:[any Layoutable]
+    public var data:[any View]
 
-    public init(_ data: [any Layoutable]) {
+    public init(_ data: [any View]) {
         self.data = data
     }
 }
 
-// MARK: Layoutable
-extension VStack: Layoutable {
+// MARK: View
+extension VStack: View {
     public var width: Int32 {
         data.max(by: { $0.width < $1.width })?.width ?? 0
     }

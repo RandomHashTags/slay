@@ -4,8 +4,8 @@ public struct Circle {
     }
 }
 
-// MARK: Layoutable
-extension Circle: Layoutable {
+// MARK: View
+extension Circle: View {
     public var width: Int32 {
         0 // TODO: fix
     }

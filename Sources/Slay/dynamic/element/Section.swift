@@ -1,19 +1,19 @@
 
 public struct Section {
     public var text:Text
-    public var data:[any Layoutable]
+    public var data:[any View]
 
     public init(
         _ text: Text,
-        data: [any Layoutable]
+        data: [any View]
     ) {
         self.text = text
         self.data = data
     }
 }
 
-// MARK: Layoutable
-extension Section: Layoutable {
+// MARK: View
+extension Section: View {
     public var width: Int32 {
         data.max(by: { $0.width < $1.width })?.width ?? 0
     }

@@ -1,5 +1,5 @@
 
-public struct ForEach<E: Layoutable> {
+public struct ForEach<E: View> {
     public var data:[E]
 
     public init(
@@ -9,8 +9,8 @@ public struct ForEach<E: Layoutable> {
     }
 }
 
-// MARK: Layoutable
-extension ForEach: Layoutable {
+// MARK: View
+extension ForEach: View {
     public var width: Int32 {
         data.max(by: { $0.width < $1.width })?.width ?? 0
     }

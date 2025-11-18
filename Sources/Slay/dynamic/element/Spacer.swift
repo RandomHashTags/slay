@@ -4,8 +4,8 @@ public struct Spacer {
     }
 }
 
-// MARK: Layoutable
-extension Spacer: Layoutable {
+// MARK: View
+extension Spacer: View {
     public var width: Int32 {
         0
     }

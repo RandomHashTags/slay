@@ -12,8 +12,8 @@ public struct Label {
     }
 }
 
-// MARK: Layoutable
-extension Label: Layoutable {
+// MARK: View
+extension Label: View {
     public var width: Int32 {
         (image?.width ?? 0) + text.width
     }

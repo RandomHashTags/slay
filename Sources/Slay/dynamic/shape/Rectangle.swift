@@ -4,8 +4,8 @@ public struct Rectangle {
     }
 }
 
-// MARK: Layoutable
-extension Rectangle: Layoutable {
+// MARK: View
+extension Rectangle: View {
     public var width: Int32 {
         0 // TODO: fix
     }
