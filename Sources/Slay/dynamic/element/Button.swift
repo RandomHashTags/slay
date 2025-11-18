@@ -1,19 +1,19 @@
 
 public struct Button {
-    public var text:Text
+    public var label:Label
 
-    public init(_ text: Text) {
-        self.text = text
+    public init(_ label: Label) {
+        self.label = label
     }
 }
 
 // MARK: Layoutable
 extension Button: Layoutable {
     public var width: Int32 {
-        text.width
+        label.width
     }
 
     public var height: Int32 {
-        text.height
+        label.height
     }
 }
