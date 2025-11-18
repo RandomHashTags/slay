@@ -1,6 +1,5 @@
 
 public final class Arena: @unchecked Sendable {
-    @usableFromInline
     package var nodes = [Node]()
 
     public init() {
@@ -16,26 +15,21 @@ public final class Arena: @unchecked Sendable {
         return id
     }
 
-    @inlinable
     public func setChildren(_ parent: NodeId, _ children: [NodeId]) {
         nodes[parent.raw].children = children
     }
 
-    @inlinable
     public func updateStyle(_ id: NodeId, _ style: Style) {
         nodes[id.raw].style = style
     }
 
-    @inlinable
     public func style(of id: NodeId) -> Style {
         nodes[id.raw].style
     }
 
-    @inlinable
     public func layout(of id: NodeId) -> Rect {
         nodes[id.raw].layout
     }
-    @inlinable
     public func layout(of id: Int) -> Rect {
         nodes[id].layout
     }

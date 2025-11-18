@@ -5,8 +5,8 @@ public struct WindowSettings: Sendable, ~Copyable {
     public let width:Int32
     public let height:Int32
 
-    @usableFromInline var _fps:UInt32
-    @usableFromInline var _fpsDelayMS:UInt32
+    var _fps:UInt32
+    var _fpsDelayMS:UInt32
 
     public let flagsRaw:UInt8
 
@@ -37,7 +37,6 @@ public struct WindowSettings: Sendable, ~Copyable {
 
 // MARK: FPS manipulation
 extension WindowSettings {
-    @inlinable
     public var fps: UInt32 {
         get { _fps }
         set {
@@ -46,7 +45,6 @@ extension WindowSettings {
         }
     }
 
-    @inlinable
     public var fpsDelayMS: UInt32 {
         get { _fpsDelayMS }
         set {
@@ -58,19 +56,15 @@ extension WindowSettings {
 
 // MARK: Flags
 extension WindowSettings {
-    @usableFromInline
     enum Flags: UInt8 {
         case alwaysOnTop    = 1
         case allowsHighDPI  = 2
         case fullscreen     = 4
         case resizable      = 8
     }
-
-    @inlinable func isFlag(_ flag: Flags) -> Bool { flagsRaw & flag.rawValue > 0 }
-
-    @inlinable public var allowsHighDPI: Bool { isFlag(.allowsHighDPI) }
-
-    @inlinable public var isAlwaysOnTop: Bool { isFlag(.alwaysOnTop) }
-    @inlinable public var isFullscreen: Bool { isFlag(.fullscreen) }
-    @inlinable public var isResizable: Bool { isFlag(.resizable) }
+    func isFlag(_ flag: Flags) -> Bool { flagsRaw & flag.rawValue > 0 }
+    public var allowsHighDPI: Bool { isFlag(.allowsHighDPI) }
+    public var isAlwaysOnTop: Bool { isFlag(.alwaysOnTop) }
+    public var isFullscreen: Bool { isFlag(.fullscreen) }
+    public var isResizable: Bool { isFlag(.resizable) }
 }

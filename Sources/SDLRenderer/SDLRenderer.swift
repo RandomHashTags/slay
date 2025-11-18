@@ -71,7 +71,6 @@ extension SDL2Renderer {
 }
 
 extension WindowSettings {
-    @inlinable
     public var flagsSDL: UInt32 {
         SDL_WINDOW_SHOWN.rawValue
         | (isFullscreen ? SDL_WINDOW_FULLSCREEN.rawValue : 0)

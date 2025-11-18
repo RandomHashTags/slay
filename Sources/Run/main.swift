@@ -3,7 +3,6 @@ import GLFWRenderer
 import Slay
 import SDLRenderer
 
-@inlinable
 public func box(
     _ arena: Arena,
     _ id: NodeId,
