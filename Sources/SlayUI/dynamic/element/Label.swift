@@ -14,8 +14,8 @@ public struct Label {
         self.image = image
 
         frame = .init(
-            width: (image?.frame._width ?? 0) + text.frame._width,
-            height: min(image?.frame._height ?? 0, text.frame._height)
+            width: (image?.frame._width ?? 0) + text.frame.width,
+            height: min(image?.frame._height ?? 0, text.frame.height)
         )
         self.backgroundColor = backgroundColor
     }

@@ -19,9 +19,10 @@ public func box(
 var arena = Arena()
 let root = arena.create(Style(axis: .row, padding: Insets(left: 8, top: 8, right: 8, bottom: 8), gap: 8), name: "root")
 let rect1 = Rectangle(width: 80, height: 80, backgroundColor: .red)
+let rect2 = Rectangle(height: 80, backgroundColor: .green)
 let rect3 = Rectangle(width: 60, height: 90, backgroundColor: .blue)
 let a = arena.create(rect1)
-let b = arena.create(Style(grow: 1, size: Size(h: 80)), name: "B")
+let b = arena.create(rect2)
 let c = arena.create(rect3)
 arena.setChildren(root, [a, b, c])
 
@@ -34,7 +35,7 @@ arena.compute(root: root, available: Vec2(x: Float(settings.width), y: Float(set
 
 var renderer = GLFWRenderer()
 renderer.render(arena, a, bg: rect1.backgroundColor)
-renderer.render(arena, b, bg: .green)
+renderer.render(arena, b, bg: rect2.backgroundColor)
 renderer.render(arena, c, bg: rect3.backgroundColor)
 
 renderer.render(
@@ -56,8 +57,15 @@ extension Arena {
 
 extension View {
     var style: Style {
-        var s = Style(size: .init(w: Float(frame._width), h: Float(frame.height)))
-        if frame.width == .widthGrow {
+        var s = Style()
+        if let width = frame._width {
+            s.size.width = Float(width)
+        } else {
+            s.grow = 1
+        }
+        if let height = frame._height {
+            s.size.height = Float(height)
+        } else {
             s.grow = 1
         }
         return s

@@ -14,12 +14,12 @@ public struct Section {
         self.data = data
 
         var width:Int32 = 0
-        var height:Int32 = text.frame._height
+        var height:Int32 = text.frame.height
         for d in data {
-            if width < d.frame._width {
-                width = d.frame._width
+            if width < d.frame.width {
+                width = d.frame.width
             }
-            height += d.frame._height
+            height += d.frame.height
         }
         frame = .init(
             width: width,

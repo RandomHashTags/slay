@@ -10,7 +10,7 @@ struct CustomView: View {
     var body: some View {
         List([
             Rectangle(width: 300, height: 300),
-            Rectangle(width: .widthGrow, height: 300),
+            Rectangle(height: 300),
             Rectangle(width: 300, height: 300)
         ])
     }

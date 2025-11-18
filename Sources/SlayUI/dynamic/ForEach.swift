@@ -13,11 +13,11 @@ public struct ForEach<E: View> {
         var width:Int32 = 0
         var height:Int32 = 0
         for d in data {
-            if width < d.frame._width {
-                width = d.frame._width
+            if width < d.frame.width {
+                width = d.frame.width
             }
-            if height < d.frame._height {
-                height = d.frame._height
+            if height < d.frame.height {
+                height = d.frame.height
             }
         }
         frame = .init(width: width, height: height)

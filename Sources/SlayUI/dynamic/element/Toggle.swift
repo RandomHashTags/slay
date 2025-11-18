@@ -17,8 +17,8 @@ public struct Toggle {
         self.image = image
         self.isOn = isOn
         frame = .init(
-            width: text.frame._width + (image?.frame._width ?? 0), // TODO: what should the toggle switch width be?
-            height: max(text.frame._height, image?.frame._height ?? 0) // TODO: what should the toggle switch height be?
+            width: text.frame.width + (image?.frame._width ?? 0), // TODO: what should the toggle switch width be?
+            height: max(text.frame.height, image?.frame._height ?? 0) // TODO: what should the toggle switch height be?
         )
         self.backgroundColor = backgroundColor
     }
