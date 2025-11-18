@@ -4,6 +4,8 @@ public struct Toggle {
     public var image:Image?
     public var isOn:Bool
 
+    public var frame:Rectangle
+
     public init(
         _ text: Text,
         image: Image? = nil,
@@ -12,16 +14,13 @@ public struct Toggle {
         self.text = text
         self.image = image
         self.isOn = isOn
+        frame = .init(
+            width: text.frame._width + (image?.frame._width ?? 0), // TODO: what should the toggle switch width be?
+            height: max(text.frame._height, image?.frame._height ?? 0) // TODO: what should the toggle switch height be?
+        )
     }
 }
 
 // MARK: View
 extension Toggle: View {
-    public var width: Int32 {
-        text.width + (image?.width ?? 0) // TODO: what should the toggle switch width be?
-    }
-
-    public var height: Int32 {
-        max(text.height, image?.height ?? 0) // TODO: what should the toggle switch height be?
-    }
 }

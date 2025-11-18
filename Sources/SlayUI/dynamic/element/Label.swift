@@ -2,6 +2,7 @@
 public struct Label {
     public var image:Image?
     public var text:Text
+    public var frame:Rectangle
 
     public init(
         _ text: Text,
@@ -9,16 +10,14 @@ public struct Label {
     ) {
         self.text = text
         self.image = image
+
+        frame = .init(
+            width: (image?.frame._width ?? 0) + text.frame._width,
+            height: min(image?.frame._height ?? 0, text.frame._height)
+        )
     }
 }
 
 // MARK: View
 extension Label: View {
-    public var width: Int32 {
-        (image?.width ?? 0) + text.width
-    }
-
-    public var height: Int32 {
-        min(image?.height ?? 0, text.height)
-    }
 }

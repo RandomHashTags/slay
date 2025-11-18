@@ -1,5 +1,6 @@
 
 import Slay
+import SlayUI
 import Testing
 
 @Suite
@@ -13,7 +14,7 @@ struct VStackTests {
             Rectangle(width: 13, height: 15),
             Rectangle(width: 7, height: 2)
         ])
-        #expect(vstack.width == 20)
-        #expect(vstack.height == 47)
+        #expect(vstack.frame.width == 20)
+        #expect(vstack.frame.height == 47)
     }
 }

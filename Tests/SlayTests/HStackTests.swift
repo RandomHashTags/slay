@@ -1,5 +1,6 @@
 
 import Slay
+import SlayUI
 import Testing
 
 @Suite
@@ -13,7 +14,7 @@ struct HStackTests {
             Rectangle(width: 13, height: 15),
             Rectangle(width: 7, height: 2)
         ])
-        #expect(hstack.width == 50)
-        #expect(hstack.height == 20)
+        #expect(hstack.frame.width == 50)
+        #expect(hstack.frame.height == 20)
     }
 }
