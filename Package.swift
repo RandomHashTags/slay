@@ -57,7 +57,10 @@ var targets:[Target] = [
     ),
 
     .target(
-        name: "SlayUI"
+        name: "SlayUI",
+        dependencies: [
+            "SlayKit"
+        ]
     ),
 
     .target(

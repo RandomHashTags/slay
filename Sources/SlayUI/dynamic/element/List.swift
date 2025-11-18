@@ -5,7 +5,7 @@ public struct List {
     public var backgroundColor:Color?
 
     public init(
-        _ data: [any View],
+        _ data: [any View] = [],
         backgroundColor: Color? = nil
     ) {
         self.data = data
