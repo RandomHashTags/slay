@@ -3,7 +3,10 @@ public struct Label {
     public var image:Image
     public var text:Text
 
-    public init(_ text: Text, image: Image) {
+    public init(
+        _ text: Text,
+        image: Image
+    ) {
         self.text = text
         self.image = image
     }
@@ -16,6 +19,6 @@ extension Label: Layoutable {
     }
 
     public var height: Int32 {
-        image.height + image.height
+        min(image.height, text.height)
     }
 }
