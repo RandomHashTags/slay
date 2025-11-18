@@ -57,8 +57,9 @@ struct ViewMacro: MemberMacro {
         let arena = Arena()
         let root = arena.create(Style(axis: .row, padding: Insets(left: 8, top: 8, right: 8, bottom: 8), gap: 8), name: "root")
         var nodes = [NodeId]()
+        var nodeBGs = [Color?]()
         if let body {
-            appendNode(arena: arena, view: body, nodes: &nodes)
+            appendNode(arena: arena, view: body, nodes: &nodes, nodeBGs: &nodeBGs)
             arena.setChildren(root, nodes)
         }
 
@@ -67,12 +68,19 @@ struct ViewMacro: MemberMacro {
             arena.compute(root: root, available: .init(x: Float(width), y: Float(height)))
 
             var members = MemberBlockItemListSyntax()
-            for node in nodes {
+            for (nodeIndex, node) in nodes.enumerated() {
+                let frame = arena.layout(of: node)
+                let nodeBG = nodeBGs[nodeIndex]
+                let command = RenderCommand.rect(
+                    frame: frame,
+                    radius: 0,
+                    bg: (nodeBG?.red ?? 0, nodeBG?.green ?? 0, nodeBG?.blue ?? 0, nodeBG?.alpha ?? 0)
+                )
                 let variableDecl = VariableDeclSyntax(
                     .var,
                     name: "_\(raw: node.raw)",
-                    type: TypeAnnotationSyntax(type: TypeSyntax(stringLiteral: "Any")),
-                    accessorBlock: .init(accessors: .getter(.init(stringLiteral: "\(arena.layout(of: node))")))
+                    type: TypeAnnotationSyntax(type: TypeSyntax(stringLiteral: "RenderCommand")),
+                    accessorBlock: .init(accessors: .getter(.init(stringLiteral: ".\(command)")))
                 )
                 members.append(.init(decl: variableDecl))
             }
@@ -92,15 +100,18 @@ extension ViewMacro {
     static func appendNode(
         arena: Arena,
         view: StaticView,
-        nodes: inout [NodeId]
+        nodes: inout [NodeId],
+        nodeBGs: inout [Color?]
     ) {
         switch view {
         case .list(let l):
             for d in l.data {
                 nodes.append(arena.create(d))
+                nodeBGs.append(l.backgroundColor)
             }
         case .rectangle(let rect):
             nodes.append(arena.create(rect))
+            nodeBGs.append(rect.backgroundColor)
         default:
             break
         }
