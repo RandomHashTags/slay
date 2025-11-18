@@ -14,6 +14,8 @@ extension List {
         for element in array {
             guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
             switch view {
+            case .list(let l):
+                list.data.append(l)
             case .rectangle(let rect):
                 list.data.append(rect)
             default:

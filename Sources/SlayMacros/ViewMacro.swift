@@ -11,8 +11,6 @@ struct ViewMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let structDecl = declaration.as(StructDeclSyntax.self)!
-        let name = structDecl.name.text
         var supportedStaticDimensions:[(width: Int32, height: Int32)] = [
             (1920, 1080),
             (1280, 720)
@@ -70,11 +68,11 @@ struct ViewMacro: MemberMacro {
             var members = MemberBlockItemListSyntax()
             for (nodeIndex, node) in nodes.enumerated() {
                 let frame = arena.layout(of: node)
-                let nodeBG = nodeBGs[nodeIndex]
+                let nodeBG = nodeBGs[nodeIndex] ?? .rgba(0, 0, 0, 0)
                 let command = RenderCommand.rect(
                     frame: frame,
                     radius: 0,
-                    bg: (nodeBG?.red ?? 0, nodeBG?.green ?? 0, nodeBG?.blue ?? 0, nodeBG?.alpha ?? 0)
+                    bg: (nodeBG.red, nodeBG.green, nodeBG.blue, nodeBG.alpha)
                 )
                 let variableDecl = VariableDeclSyntax(
                     .var,
@@ -86,7 +84,7 @@ struct ViewMacro: MemberMacro {
             }
 
             let staticStruct = StructDeclSyntax(
-                name: "Static\(raw: name)_\(raw: width)x\(raw: height)",
+                name: "Static_\(raw: width)x\(raw: height)",
                 memberBlock: .init(members: members)
             )
             decls.append(.init(staticStruct))
@@ -107,7 +105,7 @@ extension ViewMacro {
         case .list(let l):
             for d in l.data {
                 nodes.append(arena.create(d))
-                nodeBGs.append(l.backgroundColor)
+                nodeBGs.append(d.backgroundColor)
             }
         case .rectangle(let rect):
             nodes.append(arena.create(rect))
