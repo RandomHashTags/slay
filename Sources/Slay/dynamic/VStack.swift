@@ -10,7 +10,7 @@ public struct VStack {
 // MARK: Layoutable
 extension VStack: Layoutable {
     public var width: Int32 {
-        data.reduce(0, { $0 + $1.width })
+        data.max(by: { $0.width < $1.width })?.width ?? 0
     }
 
     public var height: Int32 {
