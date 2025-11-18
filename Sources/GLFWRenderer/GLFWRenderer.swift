@@ -1,7 +1,7 @@
 
 import CGLFW
 import GL
-import Slay
+import SlayKit
 
 public struct GLFWRenderer: RendererProtocol, @unchecked Sendable {
     let vertexSrc = """

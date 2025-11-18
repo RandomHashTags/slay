@@ -32,7 +32,7 @@ let package = Package(
         .target(
             name: "GLFWRenderer",
             dependencies: [
-                "Slay",
+                "SlayKit",
                 "CGLFW",
                 .product(name: "GL", package: "swift-opengl")
             ],
@@ -47,12 +47,23 @@ let package = Package(
         .target(
             name: "SDLRenderer",
             dependencies: [
+                "SlayKit",
                 .product(name: "SDL", package: "SwiftSDL2")
             ]
         ),
 
         .target(
-            name: "Slay"
+            name: "SlayKit",
+            swiftSettings: [
+                .enableExperimentalFeature("ExistentialAny")
+            ]
+        ),
+        .target(
+            name: "Slay",
+            dependencies: ["SlayKit"],
+            swiftSettings: [
+                .enableExperimentalFeature("ExistentialAny")
+            ]
         ),
         .executableTarget(
             name: "Run",

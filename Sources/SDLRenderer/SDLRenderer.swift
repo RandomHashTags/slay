@@ -1,6 +1,6 @@
 
 import SDL
-import Slay
+import SlayKit
 
 public struct SDL2Renderer: RendererProtocol, @unchecked Sendable {
 

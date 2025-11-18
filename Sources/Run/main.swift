@@ -1,6 +1,6 @@
 
 import GLFWRenderer
-import Slay
+import SlayKit
 import SDLRenderer
 
 public func box(
