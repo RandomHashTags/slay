@@ -26,6 +26,8 @@ public struct GLFWRenderer: RendererProtocol, @unchecked Sendable {
     private var vbo:UInt32 = 0
     private var prog:UInt32 = 0
 
+    var queue:[RenderCommand] = []
+
     public init() {
         check(glfwInit() == GLFW_TRUE)
 
@@ -41,8 +43,7 @@ public struct GLFWRenderer: RendererProtocol, @unchecked Sendable {
 // MARK: Render
 extension GLFWRenderer {
     public mutating func render(
-        windowSettings: borrowing WindowSettings,
-        arena: Arena
+        windowSettings: borrowing WindowSettings
     ) {
         let window = glfwCreateWindow(windowSettings.width, windowSettings.height, windowSettings.title, nil, nil)
         if window == nil {
@@ -67,16 +68,16 @@ extension GLFWRenderer {
             CGLFW.glClearColor(0.12, 0.12, 0.12, 1.0)
             CGLFW.glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
 
-            for id in 1..<arena.nodes.count {
-                let color:(Float, Float, Float, Float)
-                switch id {
-                case 1: color = (1, 0, 0, 1)
-                case 2: color = (0, 1, 0, 1)
-                case 3: color = (0, 0, 1, 1)
-                default: color = (1, 1, 1, 1)
+            for cmd in queue {
+                switch cmd {
+                case .rect(let frame, let radius, let bg):
+                    drawRect(
+                        frame,
+                        color: (Float(bg.0) / 255, Float(bg.1) / 255, Float(bg.2) / 255, Float(bg.3) / 255),
+                        width: Float(width),
+                        height: Float(height)
+                    )
                 }
-                let rect = arena.layout(of: id)
-                drawRect(rect, color: color, width: Float(width), height: Float(height))
             }
             glfwSwapBuffers(window)
             glfwPollEvents()
@@ -160,10 +161,9 @@ extension GLFWRenderer {
         width: Float,
         height: Float
     ) {
-        var verts = ndc(rect.x, rect.y, rect.w, rect.h, width, height)
         glBindVertexArray(vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
-
+        var verts = ndc(rect.x, rect.y, rect.w, rect.h, width, height)
         let vertsMS = verts.mutableSpan
         vertsMS.withUnsafeBytes {
             glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vertsMS.count * MemoryLayout<Float>.size), $0.baseAddress, GL_DYNAMIC_DRAW)
@@ -184,10 +184,7 @@ extension GLFWRenderer {
 
 // MARK: Push
 extension GLFWRenderer {
-    public func push(_ cmd: RenderCommand) {
-        switch cmd {
-        case .rect(let rect, let radius, let color):
-            break
-        }
+    public mutating func push(_ cmd: RenderCommand) {
+        queue.append(cmd)
     }
 }

@@ -16,7 +16,7 @@ public struct Style: Sendable {
     public var clip:Bool
 
     public init(
-        axis: Axis = .column,
+        axis: Axis,
         wrap: Bool = false,
         justify: Justify = .start,
         align: Align = .start,

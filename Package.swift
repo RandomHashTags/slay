@@ -48,15 +48,28 @@ var targets:[Target] = [
     .macro(
         name: "SlayMacros",
         dependencies: [
+            "SlayUI",
             .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             .product(name: "SwiftDiagnostics", package: "swift-syntax"),
             .product(name: "SwiftSyntax", package: "swift-syntax"),
             .product(name: "SwiftSyntaxMacros", package: "swift-syntax")
         ]
     ),
+
+    .target(
+        name: "SlayUI",
+        dependencies: [
+            "SlayKit"
+        ]
+    ),
+
     .target(
         name: "Slay",
-        dependencies: ["SlayKit"]
+        dependencies: [
+            "SlayKit",
+            "SlayMacros",
+            "SlayUI"
+        ]
     ),
 
     // MARK: Run
@@ -64,6 +77,8 @@ var targets:[Target] = [
         name: "Run",
         dependencies: [
             "Slay",
+            "SlayKit",
+            "SlayUI",
 
             "GLFWRenderer",
             "SDLRenderer"

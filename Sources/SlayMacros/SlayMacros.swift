@@ -5,5 +5,6 @@ import SwiftSyntaxMacros
 @main
 struct SlayMacros: CompilerPlugin {
     let providingMacros:[any Macro.Type] = [
+        ViewMacro.self
     ]
 }

@@ -7,7 +7,7 @@ public final class Arena: @unchecked Sendable {
 
     @discardableResult
     public func create(
-        _ style: Style = Style(),
+        _ style: Style,
         name: String? = nil
     ) -> NodeId {
         let id = NodeId(raw: nodes.count)
