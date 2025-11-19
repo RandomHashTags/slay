@@ -5,21 +5,26 @@ public struct VStack {
     public var backgroundColor:Color?
 
     public init(
-        _ data: [any View],
+        _ data: [any View] = [],
         backgroundColor: Color? = nil
     ) {
         self.data = data
-
-        var width:Int32 = 0
-        var height:Int32 = 0
-        for d in data {
-            if width < d.frame.width {
-                width = d.frame.width
-            }
-            height += d.frame.height
-        }
-        frame = .init(width: width, height: height)
+        frame = Self.calculateFrame(with: data)
         self.backgroundColor = backgroundColor
+    }
+
+    static func calculateFrame(with data: [any View]) -> Rectangle {
+        var width:Int32? = nil
+        var height:Int32? = nil
+        for d in data {
+            if let w = d.frame._width, width == nil || width! < w {
+                width = w
+            }
+            if let h = d.frame._height {
+                height = (height ?? 0) + h
+            }
+        }
+        return .init(width: width, height: height)
     }
 }
 

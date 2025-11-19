@@ -5,17 +5,19 @@ public struct HStack {
     public var backgroundColor:Color?
 
     public init(
-        _ data: [any View],
+        _ data: [any View] = [],
         backgroundColor: Color? = nil
     ) {
         self.data = data
 
-        var width:Int32 = 0
-        var height:Int32 = 0
+        var width:Int32? = nil
+        var height:Int32? = nil
         for d in data {
-            width += d.frame.width
-            if height < d.frame.height {
-                height = d.frame.height
+            if let w = d.frame._width {
+                width = (width ?? 0) + w
+            }
+            if let h = d.frame._height, height == nil || height! < h {
+                height = h
             }
         }
         frame = .init(width: width, height: height)

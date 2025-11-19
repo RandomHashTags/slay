@@ -14,10 +14,11 @@ extension List {
         for element in array {
             guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
             switch view {
-            case .list(let l):
-                list.data.append(l)
-            case .rectangle(let rect):
-                list.data.append(rect)
+            case .hstack(let v): list.data.append(v)
+            case .list(let v): list.data.append(v)
+            case .rectangle(let v): list.data.append(v)
+            case .vstack(let v): list.data.append(v)
+            case .zstack(let v): list.data.append(v)
             default:
                 break
             }

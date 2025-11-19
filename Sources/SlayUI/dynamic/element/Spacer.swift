@@ -6,7 +6,7 @@ public struct Spacer {
     public init(
         backgroundColor: Color? = nil
     ) {
-        frame = .init(width: 0, height: 0) // TODO: fix
+        frame = .init(width: nil, height: nil)
         self.backgroundColor = backgroundColor
     }
 }

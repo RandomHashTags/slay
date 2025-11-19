@@ -13,7 +13,7 @@ public struct Text {
         self.text = text
         self.fontSize = fontSize
 
-        frame = .init(width: 0, height: 0) // TODO: fix
+        frame = .init(width: nil, height: nil)
         self.backgroundColor = backgroundColor
     }
 }
@@ -27,7 +27,7 @@ extension Text: ExpressibleByStringLiteral {
     public init(stringLiteral value: StringLiteralType) {
         self.text = value
         fontSize = 16
-        frame = .init(width: 0, height: 0) // TODO: fix
+        frame = .init(width: nil, height: nil)
         backgroundColor = nil
     }
 }

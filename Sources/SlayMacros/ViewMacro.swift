@@ -53,35 +53,55 @@ struct ViewMacro: MemberMacro {
         }
 
         let arena = Arena()
-        let root = arena.create(Style(axis: .row, padding: Insets(left: 8, top: 8, right: 8, bottom: 8), gap: 8), name: "root")
-        var nodes = [NodeId]()
+        let root = arena.create(
+            Style(
+                axis: .row,
+                padding: Insets(left: 8, top: 8, right: 8, bottom: 8)
+            ),
+            name: "root"
+        )
         var nodeBGs = [Color?]()
+        nodeBGs.append(nil) // root node color
         if let body {
-            appendNode(arena: arena, view: body, nodes: &nodes, nodeBGs: &nodeBGs)
-            arena.setChildren(root, nodes)
+            arena.setChildren(root, [appendNode(arena: arena, view: body, nodeBGs: &nodeBGs)])
         }
 
         var decls = [DeclSyntax]()
         for (width, height) in supportedStaticDimensions {
             arena.compute(root: root, available: .init(x: Float(width), y: Float(height)))
 
+            var renderCommands = [RenderCommand]()
             var members = MemberBlockItemListSyntax()
-            for (nodeIndex, node) in nodes.enumerated() {
-                let frame = arena.layout(of: node)
-                let nodeBG = nodeBGs[nodeIndex] ?? .rgba(0, 0, 0, 0)
-                let command = RenderCommand.rect(
-                    frame: frame,
-                    radius: 0,
-                    bg: (nodeBG.red, nodeBG.green, nodeBG.blue, nodeBG.alpha)
-                )
+            let cmd = renderCommandFor(arena: arena, nodeBGs: nodeBGs, nodeId: root)
+            renderCommands.append(cmd)
+            appendRenderCommands(
+                for: arena.nodes[root.raw].children,
+                arena: arena,
+                nodeBGs: nodeBGs,
+                renderCommands: &renderCommands
+            )
+            for (index, cmd) in renderCommands.enumerated() {
                 let variableDecl = VariableDeclSyntax(
-                    .var,
-                    name: "_\(raw: node.raw)",
+                    modifiers: [
+                        .init(name: .keyword(.static))
+                    ],
+                    .let,
+                    name: "_\(raw: index)",
                     type: TypeAnnotationSyntax(type: TypeSyntax(stringLiteral: "RenderCommand")),
-                    accessorBlock: .init(accessors: .getter(.init(stringLiteral: ".\(command)")))
+                    initializer: .init(value: ExprSyntax(stringLiteral: ".\(cmd)"))
                 )
                 members.append(.init(decl: variableDecl))
             }
+
+            members.append(.init(decl: VariableDeclSyntax.init(
+                modifiers: [
+                    .init(name: .keyword(.static))
+                ],
+                .let,
+                name: "renderCommands",
+                type: .init(type: TypeSyntax(stringLiteral: "[\(renderCommands.count) of RenderCommand]")),
+                initializer: .init(value: ExprSyntax(stringLiteral: "[\((0..<renderCommands.count).map({ "Self._\($0)" }).joined(separator: ", "))]"))
+            )))
 
             let staticStruct = StructDeclSyntax(
                 name: "Static_\(raw: width)x\(raw: height)",
@@ -93,25 +113,93 @@ struct ViewMacro: MemberMacro {
     }
 }
 
-// MARK: Add nodes
+// MARK: Append render commands
+extension ViewMacro {
+    private static func appendRenderCommands(
+        for children: [NodeId],
+        arena: Arena,
+        nodeBGs: [Color?],
+        renderCommands: inout [RenderCommand]
+    ) {
+        for childId in children {
+            let cmd = renderCommandFor(
+                arena: arena,
+                nodeBGs: nodeBGs,
+                nodeId: childId
+            )
+            renderCommands.append(cmd)
+            let subChildren = arena.nodes[childId.raw].children
+            appendRenderCommands(
+                for: subChildren,
+                arena: arena,
+                nodeBGs: nodeBGs,
+                renderCommands: &renderCommands
+            )
+        }
+    }
+    private static func renderCommandFor(
+        arena: Arena,
+        nodeBGs: [Color?],
+        nodeId: NodeId
+    ) -> RenderCommand {
+        let frame = arena.layout(of: nodeId)
+        /*guard let nodeBG = nodeBGs[nodeId.raw] else { // we have the -1 because the root node is present
+            // no color, no render
+            return nil
+        }*/
+        let nodeBG = nodeBGs[nodeId.raw] ?? Color.rgba(0, 0, 0, 0)
+        return RenderCommand.rect(
+            frame: frame,
+            radius: 0,
+            bg: (nodeBG.red, nodeBG.green, nodeBG.blue, nodeBG.alpha)
+        )
+    }
+}
+
+// MARK: Append node
 extension ViewMacro {
     static func appendNode(
         arena: Arena,
         view: StaticView,
-        nodes: inout [NodeId],
         nodeBGs: inout [Color?]
-    ) {
+    ) -> NodeId {
         switch view {
-        case .list(let l):
-            for d in l.data {
-                nodes.append(arena.create(d))
+        case .list(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            for d in v.data {
                 nodeBGs.append(d.backgroundColor)
             }
-        case .rectangle(let rect):
-            nodes.append(arena.create(rect))
-            nodeBGs.append(rect.backgroundColor)
+            return id
+
+        case .hstack(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            for d in v.data {
+                nodeBGs.append(d.backgroundColor)
+            }
+            return id
+        case .vstack(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            for d in v.data {
+                nodeBGs.append(d.backgroundColor)
+            }
+            return id
+        case .zstack(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            for d in v.data {
+                nodeBGs.append(d.backgroundColor)
+            }
+            return id
+
+        case .rectangle(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            return id
         default:
-            break
+            fatalError("broken")
         }
     }
 }
@@ -119,8 +207,11 @@ extension ViewMacro {
 // MARK: StaticView
 extension ViewMacro {
     enum StaticView {
+        case hstack(HStack)
         case list(List)
         case rectangle(Rectangle)
+        case vstack(VStack)
+        case zstack(ZStack)
         case custom(String)
     }
 }
@@ -144,12 +235,19 @@ extension ViewMacro {
             guard let v = List.parse(context: context, expr: expr) else { return nil }
             return .list(v)
 
-        case "HStack": return nil
-        case "VStack": return nil
-        case "ZStack": return nil
+        case "HStack":
+            guard let v = HStack.parse(context: context, expr: expr) else { return nil }
+            return .hstack(v)
+        case "VStack":
+            guard let v = VStack.parse(context: context, expr: expr) else { return nil }
+            return .vstack(v)
+        case "ZStack":
+            guard let v = ZStack.parse(context: context, expr: expr) else { return nil }
+            return .zstack(v)
 
         case "Circle": return nil
-        case "Rectangle": return .rectangle(.parse(context: context, expr: expr))
+        case "Rectangle":
+            return .rectangle(.parse(context: context, expr: expr))
         default:
             return nil
         }

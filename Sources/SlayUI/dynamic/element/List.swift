@@ -10,13 +10,15 @@ public struct List {
     ) {
         self.data = data
 
-        var width:Int32 = 0
-        var height:Int32 = 0
+        var width:Int32? = nil
+        var height:Int32? = nil
         for d in data {
-            if width < d.frame.width {
-                width = d.frame.width
+            if let w = d.frame._width, width == nil || width! < w {
+                width = w
             }
-            height += d.frame.height
+            if let h = d.frame._height {
+                height = (height ?? 0) + h
+            }
         }
         frame = .init(width: width, height: height)
         self.backgroundColor = backgroundColor
