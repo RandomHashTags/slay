@@ -9,19 +9,14 @@ extension StaticList {
         expr: some ExprSyntaxProtocol
     ) -> Self? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
-        guard let array = f.arguments.first?.expression.as(ArrayExprSyntax.self)?.elements else { return nil }
         var list = Self()
-        for element in array {
-            guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
-            switch view {
-            case .staticHStack(let v): list.data.append(v)
-            case .staticList(let v): list.data.append(v)
-            case .staticRectangle(let v): list.data.append(v)
-            case .staticVStack(let v): list.data.append(v)
-            case .staticZStack(let v): list.data.append(v)
-            default:
-                break
-            }
+        if let array = f.arguments.first?.expression.as(ArrayExprSyntax.self)?.elements {
+            appendArray(context: context, array: array, into: &list.data)
+        } else if let statements = f.trailingClosure?.statements {
+            appendCodeBlockList(context: context, codeBlockList: statements, into: &list.data)
+        } else {
+            fatalError(f.debugDescription)
+            return nil
         }
         return list
     }

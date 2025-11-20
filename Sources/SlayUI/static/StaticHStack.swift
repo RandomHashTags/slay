@@ -5,7 +5,7 @@ public struct StaticHStack: StaticView {
     public var backgroundColor:Color?
 
     public init(
-        data: [any StaticView] = [],
+        _ data: [any StaticView] = [],
         backgroundColor: Color? = nil
     ) {
         self.data = data

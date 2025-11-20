@@ -9,19 +9,14 @@ extension StaticHStack {
         expr: some ExprSyntaxProtocol
     ) -> Self? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
-        guard let array = f.arguments.first?.expression.as(ArrayExprSyntax.self)?.elements else { return nil }
         var stack = Self()
-        for element in array {
-            guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
-            switch view {
-            case .staticHStack(let v): stack.data.append(v)
-            case .staticList(let v): stack.data.append(v)
-            case .staticRectangle(let v): stack.data.append(v)
-            case .staticVStack(let v): stack.data.append(v)
-            case .staticZStack(let v): stack.data.append(v)
-            default:
-                break
-            }
+        if let array = f.arguments.first?.expression.as(ArrayExprSyntax.self)?.elements {
+            appendArray(context: context, array: array, into: &stack.data)
+        } else if let statements = f.trailingClosure?.statements {
+            appendCodeBlockList(context: context, codeBlockList: statements, into: &stack.data)
+        } else {
+            fatalError(f.debugDescription)
+            return nil
         }
         for arg in f.arguments {
             switch arg.label?.text {

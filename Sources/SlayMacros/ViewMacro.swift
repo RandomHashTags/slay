@@ -232,23 +232,23 @@ extension ViewMacro {
         expr: FunctionCallExprSyntax
     ) -> ViewType? {
         switch expr.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text {
-        case "StaticButton": return nil
-        case "StaticList":
+        case "StaticButton", "Button": return nil
+        case "StaticList", "List":
             guard let v = StaticList.parse(context: context, expr: expr) else { return nil }
             return .staticList(v)
 
-        case "StaticHStack":
+        case "StaticHStack", "HStack":
             guard let v = StaticHStack.parse(context: context, expr: expr) else { return nil }
             return .staticHStack(v)
-        case "StaticVStack":
+        case "StaticVStack", "VStack":
             guard let v = StaticVStack.parse(context: context, expr: expr) else { return nil }
             return .staticVStack(v)
-        case "StaticZStack":
+        case "StaticZStack", "ZStack":
             guard let v = StaticZStack.parse(context: context, expr: expr) else { return nil }
             return .staticZStack(v)
 
-        case "StaticCircle": return nil
-        case "StaticRectangle":
+        case "StaticCircle", "Circle": return nil
+        case "StaticRectangle", "Rectangle":
             return .staticRectangle(.parse(context: context, expr: expr))
         default:
             return nil
