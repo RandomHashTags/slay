@@ -11,10 +11,7 @@ struct ViewMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        var supportedStaticDimensions:[(width: Int32, height: Int32)] = [
-            (1920, 1080),
-            (1280, 720)
-        ]
+        var supportedStaticDimensions:[(width: Int32, height: Int32)] = slaySupportedStaticDimensions
         //fatalError(declaration.debugDescription)
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
@@ -106,6 +103,7 @@ struct ViewMacro: MemberMacro {
             )))
 
             let staticStruct = StructDeclSyntax(
+                leadingTrivia: "// MARK: \(width)x\(height)\n",
                 name: "Static_\(raw: width)x\(raw: height)",
                 memberBlock: .init(members: members)
             )
