@@ -3,7 +3,7 @@ import CGLFW
 import GL
 import SlayKit
 
-public struct GLFWRenderer: RendererProtocol, @unchecked Sendable {
+public struct GLFWRenderer: ~Copyable, RendererProtocol, @unchecked Sendable {
     var queue:[RenderCommand] = []
 
     private var rectRenderer:RectRenderer! = nil
@@ -24,6 +24,7 @@ public struct GLFWRenderer: RendererProtocol, @unchecked Sendable {
 // MARK: Render
 extension GLFWRenderer {
     public mutating func render(
+        fontAtlas: consuming FontAtlas?,
         windowSettings: borrowing WindowSettings
     ) {
         let window = glfwCreateWindow(windowSettings.width, windowSettings.height, windowSettings.title, nil, nil)
@@ -37,16 +38,18 @@ extension GLFWRenderer {
             screenH: Float(windowSettings.height)
         )
 
-        if let atlas = FontAtlas(
-            ttfPath: "/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf",
-            pixelSize: 16
-        ) {
+        if let fontAtlas {
             textRenderer = TextRenderer(
-                atlas: atlas,
+                atlas: fontAtlas,
                 screenW: Float(windowSettings.width),
                 screenH: Float(windowSettings.height)
             )
-            queue.append(.text(text: "how much wood can a woodchuck chuck; peter piper picked a pack of picked peppers!", x: 100, y: 50, color: (0, 0, 0, 1)))
+            queue.append(.text(
+                text: "How much wood can a woodchuck chuck if a woodchuck could chuck wood?; Peter Piper picked a peck of pickled peppers!",
+                x: 100,
+                y: 50,
+                color: (0, 0, 0, 1)
+            ))
         } else {
             print("failed to load font")
         }
@@ -65,6 +68,8 @@ extension GLFWRenderer {
                     rectRenderer.draw(frame, color: color)
                 case .text(let text, let x, let y, let color):
                     textRenderer?.draw(text, x: x, y: y, color: color)
+                case .textVertices(let vertices, let color):
+                    textRenderer?.draw(vertices, color: color)
                 }
             }
             glfwSwapBuffers(window)

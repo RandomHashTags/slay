@@ -1,6 +1,7 @@
 
-public protocol RendererProtocol: Sendable {
+public protocol RendererProtocol: Sendable, ~Copyable {
     mutating func render(
+        fontAtlas: consuming FontAtlas?,
         windowSettings: borrowing WindowSettings
     )
 

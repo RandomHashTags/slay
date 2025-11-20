@@ -14,6 +14,7 @@ public struct SDL2Renderer: RendererProtocol, @unchecked Sendable {
     /// - Parameters:
     ///   - fps: Target frames per second to render the window.
     public mutating func render(
+        fontAtlas: borrowing FontAtlas?,
         windowSettings: borrowing WindowSettings
     ) {
         let window = SDL_CreateWindow(

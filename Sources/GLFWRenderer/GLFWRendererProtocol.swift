@@ -2,10 +2,10 @@
 import CGLFW
 import GL
 
-protocol GLFWRendererProtocol {
+protocol GLFWRendererProtocol: ~Copyable {
 }
 
-extension GLFWRendererProtocol {
+extension GLFWRendererProtocol where Self: ~Copyable {
     func compileShader(
         _ src: String,
         _ type: UInt32

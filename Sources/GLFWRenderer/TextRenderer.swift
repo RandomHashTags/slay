@@ -1,19 +1,20 @@
 
 import CGLFW
 import GL
+import SlayKit
 
 // https://learnopengl.com/In-Practice/Text-Rendering
-public struct TextRenderer: GLFWRendererProtocol {
+public struct TextRenderer: GLFWRendererProtocol, ~Copyable {
     public var texture:UInt32 = 0
     public var vao:UInt32 = 0
     public var vbo:UInt32 = 0
     public var program:UInt32 = 0
-    public let atlas:FontAtlas
-    public let screenW:Float
-    public let screenH:Float
+    public var atlas:FontAtlas
+    public var screenW:Float
+    public var screenH:Float
 
     public init(
-        atlas: FontAtlas,
+        atlas: consuming FontAtlas,
         screenW: Float,
         screenH: Float
     ) {
@@ -83,14 +84,9 @@ extension TextRenderer {
     }
 }
 
-// MARK: Draw
+// MARK: Prepare draw
 extension TextRenderer {
-    public func draw(
-        _ text: String,
-        x: Float,
-        y: Float,
-        color: (Float, Float, Float, Float)
-    ) {
+    private func prepareDraw(color: (Float, Float, Float, Float)) {
         glUseProgram(program)
         let locScreen = glGetUniformLocation(program, "uScreen")
         var screen = [screenW, screenH]
@@ -105,9 +101,21 @@ extension TextRenderer {
         glUniform1i(uAtlasLoc, zero)
         glBindVertexArray(vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    }
+}
+
+// MARK: Draw
+extension TextRenderer {
+    public func draw(
+        _ text: String,
+        x: Float,
+        y: Float,
+        color: (Float, Float, Float, Float)
+    ) {
+        prepareDraw(color: color)
 
         var x = x
-        var verts = [Float]() // x,y,u,v per vertex (6 vertices per glyph)
+        var vertices = [Float]() // x,y,u,v per vertex (6 vertices per glyph)
         for scalar in text.unicodeScalars {
             guard let glyph = atlas.glyphs[UInt32(scalar.value)] else { continue }
             let gx = Float(glyph.atlasX)
@@ -127,13 +135,30 @@ extension TextRenderer {
             let y1 = y0 - gh
 
             // two triangles
-            verts += [x0, y1, u0, v1,  x1, y1, u1, v1,  x1, y0, u1, v0]
-            verts += [x1, y0, u1, v0,  x0, y0, u0, v0,  x0, y1, u0, v1]
+            vertices += [x0, y1, u0, v1,  x1, y1, u1, v1,  x1, y0, u1, v0]
+            vertices += [x1, y0, u1, v0,  x0, y0, u0, v0,  x0, y1, u0, v1]
 
             x += Float(glyph.advance)
         }
+        guard !vertices.isEmpty else { return }
+        drawVertices(vertices)
+    }
+}
 
-        guard !verts.isEmpty else { return }
+// MARK: Draw verts
+extension TextRenderer {
+    /// - Warning: Doesn't check if `verts` is empty!
+    public func draw(
+        _ verts: [Float],
+        color: (Float, Float, Float, Float)
+    ) {
+        prepareDraw(color: color)
+        drawVertices(verts)
+    }
+
+    private func drawVertices(
+        _ verts: [Float]
+    ) {
         verts.withUnsafeBytes { buf in
             glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(buf.count), buf.baseAddress, GL_DYNAMIC_DRAW)
         }

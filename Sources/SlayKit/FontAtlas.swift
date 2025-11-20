@@ -1,9 +1,8 @@
 
 import Freetype2
-import SlayKit
 
 // https://freetype.org/freetype2/docs/tutorial/step1.html
-public final class FontAtlas {
+public struct FontAtlas: ~Copyable {
     public private(set) var textureWidth = 0
     public private(set) var textureHeight = 0
     public private(set) var glyphs = [UInt32:Glyph]()
@@ -46,7 +45,7 @@ public final class FontAtlas {
 
 // MARK: Setup
 extension FontAtlas {
-    private func setup(characters: [UInt32]) {
+    private mutating func setup(characters: [UInt32]) {
         // simple packing: row by row
         let padding = 1
         var rowHeight = 0
@@ -138,5 +137,25 @@ extension FontAtlas {
             x += width + padding
             rowHeight = max(rowHeight, height)
         }
+    }
+}
+
+// MARK: Measure text
+extension FontAtlas {
+    public func measure(_ text: String) -> (width: Float, height: Float) {
+        var width:Float = 0
+        var maxAscent:Float = 0
+        var maxDescent:Float = 0
+        for scalar in text.unicodeScalars {
+            guard let g = glyphs[UInt32(scalar.value)] else { continue }
+
+            // horizontal width
+            width += Float(g.advance)
+
+            // vertical metrics
+            maxAscent = max(maxAscent,  Float(g.bearingY))
+            maxDescent = max(maxDescent, Float(g.height - g.bearingY))
+        }
+        return (width, maxAscent + maxDescent)
     }
 }

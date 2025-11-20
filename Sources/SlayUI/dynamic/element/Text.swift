@@ -1,11 +1,13 @@
 
+import SlayKit
+
 public struct Text: View {
     public var text:String
-    public var fontSize:Int32
+    public var fontSize:Int
 
     public init(
         _ text: String,
-        fontSize: Int32 = 16,
+        fontSize: Int = slayDefaultFontSize,
         backgroundColor: Color? = nil
     ) {
         self.text = text
@@ -21,6 +23,6 @@ public struct Text: View {
 extension Text: ExpressibleByStringLiteral {
     public init(stringLiteral value: StringLiteralType) {
         self.text = value
-        fontSize = 16
+        fontSize = slayDefaultFontSize
     }
 }

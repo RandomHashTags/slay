@@ -1,13 +1,15 @@
 
+import SlayKit
+
 public struct StaticText: StaticView {
     public var text:String
-    public var fontSize:Int32
+    public var fontSize:Int
     public var frame:StaticRectangle
     public var backgroundColor:Color?
 
     public init(
         _ text: String,
-        fontSize: Int32 = 16,
+        fontSize: Int = slayDefaultFontSize,
         backgroundColor: Color? = nil
     ) {
         self.text = text
@@ -22,7 +24,7 @@ public struct StaticText: StaticView {
 extension StaticText: ExpressibleByStringLiteral {
     public init(stringLiteral value: StringLiteralType) {
         self.text = value
-        fontSize = 16
+        fontSize = slayDefaultFontSize
         frame = .init(width: nil, height: nil)
         backgroundColor = nil
     }
