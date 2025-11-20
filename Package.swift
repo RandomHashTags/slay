@@ -48,7 +48,10 @@ var targets:[Target] = [
 
     // MARK: SlayKit
     .target(
-        name: "SlayKit"
+        name: "SlayKit",
+        dependencies: [
+            "Freetype2"
+        ]
     ),
 
     // MARK: SlayMacros
@@ -66,7 +69,6 @@ var targets:[Target] = [
     .target(
         name: "SlayUI",
         dependencies: [
-            "Freetype2",
             "SlayKit"
         ]
     ),

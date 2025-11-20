@@ -29,6 +29,7 @@ public let slaySupportedStaticDimensions:[(width: Int32, height: Int32)] = [
     (6016, 3384), // 32" Pro Display XDR
     (5120, 2880), // Apple Studio Display
 
+    // https://en.wikipedia.org/wiki/List_of_iPhone_models
     (1320, 2868), // iPhone 17 Pro Max
     (1206, 2622), // iPhone 17 Pro, iPhone 17
     (1260, 2736), // iPhone Air
@@ -38,6 +39,7 @@ public let slaySupportedStaticDimensions:[(width: Int32, height: Int32)] = [
 
     (3456, 2234), // 16" MacBook Pro (Apple Silicon)
 
+    // https://en.wikipedia.org/wiki/Apple_Watch
     (272, 340),   // Apple Watch Series 3 (38mm)
     (312, 390),   // Apple Watch Series 3 (42mm)
     (374, 446),   // Apple Watch Series 11 (42mm)

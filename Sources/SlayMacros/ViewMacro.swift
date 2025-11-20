@@ -151,7 +151,12 @@ extension ViewMacro {
         return RenderCommand.rect(
             frame: frame,
             radius: 0,
-            bg: (nodeBG.red, nodeBG.green, nodeBG.blue, nodeBG.alpha)
+            color: (
+                Float(nodeBG.red) / 255,
+                Float(nodeBG.green) / 255,
+                Float(nodeBG.blue) / 255,
+                Float(nodeBG.alpha) / 255
+            )
         )
     }
 }
