@@ -1,0 +1,5 @@
+module Freetype2 [system] {
+    header "shim.h"
+    link "freetype"
+    export *
+}

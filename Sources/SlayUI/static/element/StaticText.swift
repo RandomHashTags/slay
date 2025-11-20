@@ -1,4 +1,6 @@
 
+//import Freetype2
+
 public struct StaticText: StaticView {
     public var text:String
     public var fontSize:Int32

@@ -13,6 +13,13 @@ var targets:[Target] = [
             .apt(["libglfw3", "libglfw3-dev"]),
         ]
     ),
+    .systemLibrary(
+        name: "Freetype2",
+        pkgConfig: "freetype2",
+        providers: [
+            .apt(["freetype2"])
+        ]
+    ),
 
     // MARK: GLFWRenderer
     .target(
@@ -59,6 +66,7 @@ var targets:[Target] = [
     .target(
         name: "SlayUI",
         dependencies: [
+            "Freetype2",
             "SlayKit"
         ]
     ),
@@ -92,7 +100,7 @@ var targets:[Target] = [
     )
 ]
 for target in targets {
-    if target.name != "CGLFW" {
+    if target.name != "CGLFW" && target.name != "Freetype2" {
         target.swiftSettings = [
             .enableExperimentalFeature("ExistentialAny")
         ]
