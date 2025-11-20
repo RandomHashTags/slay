@@ -3,22 +3,22 @@ import SlayUI
 import SwiftSyntax
 import SwiftSyntaxMacros
 
-extension ZStack {
+extension StaticHStack {
     public static func parse(
         context: some MacroExpansionContext,
         expr: some ExprSyntaxProtocol
-    ) -> ZStack? {
+    ) -> Self? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
         guard let array = f.arguments.first?.expression.as(ArrayExprSyntax.self)?.elements else { return nil }
-        var stack = ZStack()
+        var stack = Self()
         for element in array {
             guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
             switch view {
-            case .hstack(let v): stack.data.append(v)
-            case .list(let v): stack.data.append(v)
-            case .rectangle(let v): stack.data.append(v)
-            case .vstack(let v): stack.data.append(v)
-            case .zstack(let v): stack.data.append(v)
+            case .staticHStack(let v): stack.data.append(v)
+            case .staticList(let v): stack.data.append(v)
+            case .staticRectangle(let v): stack.data.append(v)
+            case .staticVStack(let v): stack.data.append(v)
+            case .staticZStack(let v): stack.data.append(v)
             default:
                 break
             }

@@ -3,12 +3,12 @@ import SlayUI
 import SwiftSyntax
 import SwiftSyntaxMacros
 
-extension Rectangle {
+extension StaticRectangle {
     public static func parse(
         context: some MacroExpansionContext,
         expr: FunctionCallExprSyntax
-    ) -> Rectangle {
-        var rect = Rectangle()
+    ) -> Self {
+        var rect = Self()
         for arg in expr.arguments {
             switch arg.label?.text {
             case "width":

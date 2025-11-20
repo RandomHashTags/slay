@@ -1,16 +1,10 @@
 
-public struct Circle {
-    public var frame:Rectangle
-    public var backgroundColor:Color?
+public struct Circle<Content: View>: View {
+    public var body:Content
 
     public init(
-        backgroundColor: Color? = nil
+        @ViewBuilder content: () -> Content 
     ) {
-        frame = .zero // TODO: fix
-        self.backgroundColor = backgroundColor
+        self.body = content()
     }
-}
-
-// MARK: View
-extension Circle: View {
 }

@@ -1,27 +1,19 @@
 
-public struct Image {
+public struct Image: View {
     var data:ImageData
-    public var frame:Rectangle
-    public var backgroundColor:Color?
 
     public init(
-        _ path: String,
-        backgroundColor: Color? = nil
+        _ path: String
     ) {
         data = .systemPath(path)
-        frame = .init(width: 0, height: 0) // TODO: fix
-        self.backgroundColor = backgroundColor
     }
     public init(
-        _ bytes: [UInt8],
-        backgroundColor: Color? = nil
+        _ bytes: [UInt8]
     ) {
         data = .bytes(bytes)
-        frame = .init(width: 0, height: 0) // TODO: fix
-        self.backgroundColor = backgroundColor
     }
-}
 
-// MARK: View
-extension Image: View {
+    public var body: some View {
+        EmptyView() // TODO: fix
+    }
 }

@@ -36,7 +36,7 @@ struct ViewMacro: MemberMacro {
                 }
             }
         }
-        var body:StaticView? = nil
+        var body:ViewType? = nil
         for member in declaration.memberBlock.members {
             if let v = member.decl.as(VariableDeclSyntax.self) {
                 if let binding = v.bindings.first, let pattern = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text {
@@ -81,7 +81,9 @@ struct ViewMacro: MemberMacro {
                 renderCommands: &renderCommands
             )
             for (index, cmd) in renderCommands.enumerated() {
+                let node = arena.nodes[index]
                 let variableDecl = VariableDeclSyntax(
+                    leadingTrivia: "// \(node.name)\n",
                     modifiers: [
                         .init(name: .keyword(.static))
                     ],
@@ -160,11 +162,11 @@ extension ViewMacro {
 extension ViewMacro {
     static func appendNode(
         arena: Arena,
-        view: StaticView,
+        view: ViewType,
         nodeBGs: inout [Color?]
     ) -> NodeId {
         switch view {
-        case .list(let v):
+        case .staticList(let v):
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             for d in v.data {
@@ -172,21 +174,21 @@ extension ViewMacro {
             }
             return id
 
-        case .hstack(let v):
+        case .staticHStack(let v):
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             for d in v.data {
                 nodeBGs.append(d.backgroundColor)
             }
             return id
-        case .vstack(let v):
+        case .staticVStack(let v):
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             for d in v.data {
                 nodeBGs.append(d.backgroundColor)
             }
             return id
-        case .zstack(let v):
+        case .staticZStack(let v):
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             for d in v.data {
@@ -194,7 +196,7 @@ extension ViewMacro {
             }
             return id
 
-        case .rectangle(let v):
+        case .staticRectangle(let v):
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             return id
@@ -204,14 +206,14 @@ extension ViewMacro {
     }
 }
 
-// MARK: StaticView
+// MARK: StaticViewType
 extension ViewMacro {
-    enum StaticView {
-        case hstack(HStack)
-        case list(List)
-        case rectangle(Rectangle)
-        case vstack(VStack)
-        case zstack(ZStack)
+    enum ViewType {
+        case staticHStack(StaticHStack)
+        case staticList(StaticList)
+        case staticRectangle(StaticRectangle)
+        case staticVStack(StaticVStack)
+        case staticZStack(StaticZStack)
         case custom(String)
     }
 }
@@ -221,33 +223,33 @@ extension ViewMacro {
     static func parseView(
         context: some MacroExpansionContext,
         expr: some ExprSyntaxProtocol
-    ) -> StaticView? {
+    ) -> ViewType? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
         return parseView(context: context, expr: f)
     }
     static func parseView(
         context: some MacroExpansionContext,
         expr: FunctionCallExprSyntax
-    ) -> StaticView? {
+    ) -> ViewType? {
         switch expr.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text {
-        case "Button": return nil
-        case "List":
-            guard let v = List.parse(context: context, expr: expr) else { return nil }
-            return .list(v)
+        case "StaticButton": return nil
+        case "StaticList":
+            guard let v = StaticList.parse(context: context, expr: expr) else { return nil }
+            return .staticList(v)
 
-        case "HStack":
-            guard let v = HStack.parse(context: context, expr: expr) else { return nil }
-            return .hstack(v)
-        case "VStack":
-            guard let v = VStack.parse(context: context, expr: expr) else { return nil }
-            return .vstack(v)
-        case "ZStack":
-            guard let v = ZStack.parse(context: context, expr: expr) else { return nil }
-            return .zstack(v)
+        case "StaticHStack":
+            guard let v = StaticHStack.parse(context: context, expr: expr) else { return nil }
+            return .staticHStack(v)
+        case "StaticVStack":
+            guard let v = StaticVStack.parse(context: context, expr: expr) else { return nil }
+            return .staticVStack(v)
+        case "StaticZStack":
+            guard let v = StaticZStack.parse(context: context, expr: expr) else { return nil }
+            return .staticZStack(v)
 
-        case "Circle": return nil
-        case "Rectangle":
-            return .rectangle(.parse(context: context, expr: expr))
+        case "StaticCircle": return nil
+        case "StaticRectangle":
+            return .staticRectangle(.parse(context: context, expr: expr))
         default:
             return nil
         }

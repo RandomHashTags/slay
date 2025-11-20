@@ -1,19 +1,10 @@
 
-public struct Button {
-    public var label:Label
-    public var frame:Rectangle
-    public var backgroundColor:Color?
+public struct Button<Label: View>: View {
+    public var body:Label
 
     public init(
-        _ label: Label,
-        backgroundColor: Color? = nil
+        @ViewBuilder label: () -> Label 
     ) {
-        self.label = label
-        frame = label.frame
-        self.backgroundColor = backgroundColor
+        self.body = label()
     }
-}
-
-// MARK: View
-extension Button: View {
 }

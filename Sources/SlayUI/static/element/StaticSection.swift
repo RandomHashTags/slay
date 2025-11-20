@@ -1,14 +1,13 @@
 
-/*
-public struct Section {
-    public var text:Text
-    public var data:[any View]
-    public var frame:Rectangle
+public struct StaticSection: StaticView {
+    public var text:StaticText
+    public var data:[any StaticView]
+    public var frame:StaticRectangle
     public var backgroundColor:Color?
 
     public init(
-        _ text: Text,
-        data: [any View],
+        _ text: StaticText,
+        data: [any StaticView],
         backgroundColor: Color? = nil
     ) {
         self.text = text
@@ -31,7 +30,3 @@ public struct Section {
         self.backgroundColor = backgroundColor
     }
 }
-
-// MARK: View
-extension Section: View {
-}*/

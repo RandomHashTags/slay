@@ -5,7 +5,7 @@ import SlayKit
 extension Arena {
     @discardableResult
     package func create(
-        _ view: some View,
+        _ view: some StaticView,
         name: String? = nil
     ) -> NodeId {
         var count = nodes.count
@@ -17,15 +17,15 @@ extension Arena {
         var gap = Float(0) // TODO: fully support
         var children = [Node]()
         var childrenIds = [NodeId]()
-        if let list = view as? List {
+        if let list = view as? StaticList {
             gap = 8
             appendChildren(list.data, name: name, axis: axis, gap: gap, children: &children, childrenIds: &childrenIds, count: &count)
-        } else if let stack = view as? HStack {
+        } else if let stack = view as? StaticHStack {
             axis = .row
             appendChildren(stack.data, name: name, axis: axis, gap: gap, children: &children, childrenIds: &childrenIds, count: &count)
-        } else if let stack = view as? VStack {
+        } else if let stack = view as? StaticVStack {
             appendChildren(stack.data, name: name, axis: axis, gap: gap, children: &children, childrenIds: &childrenIds, count: &count)
-        } else if let stack = view as? ZStack {
+        } else if let stack = view as? StaticZStack {
             appendChildren(stack.data, name: name, axis: axis, gap: gap, children: &children, childrenIds: &childrenIds, count: &count)
         }
         nodes.append(Node(style: view.style(axis: axis, gap: gap), children: childrenIds, name: name))
@@ -33,7 +33,7 @@ extension Arena {
         return parentId
     }
     private func appendChildren(
-        _ childViews: [any View],
+        _ childViews: [any StaticView],
         name: String,
         axis: Axis,
         gap: Float,
@@ -53,7 +53,7 @@ extension Arena {
     }
 }
 
-extension View {
+extension StaticView {
     package func style(
         axis: Axis,
         gap: Float

@@ -8,7 +8,7 @@ public final class Arena: @unchecked Sendable {
     @discardableResult
     public func create(
         _ style: Style,
-        name: String? = nil
+        name: String
     ) -> NodeId {
         let id = NodeId(raw: nodes.count)
         nodes.append(Node(style: style, name: name))
@@ -42,14 +42,14 @@ extension Arena {
         public var children:[NodeId]
         public var layout:Rect
         public var measured:Bool
-        public var name:String?
+        public var name:String
 
         public init(
             style: Style,
             children: [NodeId] = [],
             layout: Rect = Rect(x: 0, y: 0, w: 0, h: 0),
             measured: Bool = false,
-            name: String? = nil // debug
+            name: String
         ) {
             self.style = style
             self.children = children
