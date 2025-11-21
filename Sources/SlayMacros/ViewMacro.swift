@@ -13,7 +13,7 @@ struct ViewMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         var supportedStaticDimensions:[(width: Int32, height: Int32)] = slaySupportedStaticDimensions
         //fatalError(declaration.debugDescription)
-        var fontAtlas = slayDefaultFontAtlas
+        var fontAtlas:FontAtlas! = slayDefaultFontAtlas
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
                 switch arg.label?.text {
@@ -36,6 +36,7 @@ struct ViewMacro: MemberMacro {
                 }
             }
         }
+        guard fontAtlas != nil else { return [] }
         var body:ViewType? = nil
         for member in declaration.memberBlock.members {
             if let v = member.decl.as(VariableDeclSyntax.self) {
@@ -44,8 +45,7 @@ struct ViewMacro: MemberMacro {
                     case "body":
                         guard case let .getter(items) = binding.accessorBlock?.accessors else { continue }
                         guard let funcExpr = items.first?.item.as(FunctionCallExprSyntax.self) else { continue }
-                        guard fontAtlas != nil else { continue }
-                        body = parseView(context: context, expr: funcExpr, fontAtlas: fontAtlas!)
+                        body = parseView(context: context, expr: funcExpr, fontAtlas: fontAtlas)
                     default:
                         break
                     }
@@ -62,7 +62,7 @@ struct ViewMacro: MemberMacro {
         for (width, height) in supportedStaticDimensions {
             engine.compute(width: width, height: height)
 
-            let renderCommands = engine.renderCommands()
+            let renderCommands = engine.renderCommands(fontAtlas: fontAtlas)
             var members = MemberBlockItemListSyntax()
             for (index, cmd) in renderCommands.enumerated() {
                 let node = engine.arena.nodes[index]

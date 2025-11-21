@@ -36,12 +36,15 @@ extension LayoutEngine {
 
 // MARK: Render commands
 extension LayoutEngine {
-    func renderCommands() -> [RenderCommand] {
+    func renderCommands(
+        fontAtlas: borrowing FontAtlas
+    ) -> [RenderCommand] {
         var renderCommands = [RenderCommand]()
-        let cmd = renderCommandFor(nodeId: root)
+        let cmd = renderCommandFor(nodeId: root, fontAtlas: fontAtlas)
         renderCommands.append(cmd)
         appendRenderCommands(
             for: arena.nodes[root.raw].children,
+            fontAtlas: fontAtlas,
             renderCommands: &renderCommands
         )
         return renderCommands
@@ -49,22 +52,26 @@ extension LayoutEngine {
 
     private func appendRenderCommands(
         for children: [NodeId],
+        fontAtlas: borrowing FontAtlas,
         renderCommands: inout [RenderCommand]
     ) {
         for childId in children {
             let cmd = renderCommandFor(
-                nodeId: childId
+                nodeId: childId,
+                fontAtlas: fontAtlas
             )
             renderCommands.append(cmd)
             let subChildren = arena.nodes[childId.raw].children
             appendRenderCommands(
                 for: subChildren,
+                fontAtlas: fontAtlas,
                 renderCommands: &renderCommands
             )
         }
     }
     private func renderCommandFor(
-        nodeId: NodeId
+        nodeId: NodeId,
+        fontAtlas: borrowing FontAtlas
     ) -> RenderCommand {
         let frame = arena.layout(of: nodeId)
         /*guard let nodeBG = nodeBGs[nodeId.raw] else {
@@ -80,9 +87,10 @@ extension LayoutEngine {
         )
         let targetView = nodeViews[nodeId.raw]
         if let staticText = targetView as? StaticText {
-            return .text(text: staticText.text, x: frame.x, y: frame.y, color: color)
+            let vertices = fontAtlas.vertices(for: staticText.text, x: frame.x, y: frame.y)
+            return .textVertices(vertices: vertices, color: color)
         }
-        return RenderCommand.rect(
+        return .rect(
             frame: frame,
             radius: 0,
             color: color

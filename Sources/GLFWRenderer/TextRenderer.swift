@@ -112,35 +112,9 @@ extension TextRenderer {
         y: Float,
         color: (Float, Float, Float, Float)
     ) {
-        prepareDraw(color: color)
-
-        var x = x
-        var vertices = [Float]() // x,y,u,v per vertex (6 vertices per glyph)
-        for scalar in text.unicodeScalars {
-            guard let glyph = atlas.glyphs[UInt32(scalar.value)] else { continue }
-            let gx = Float(glyph.atlasX)
-            let gy = Float(glyph.atlasY)
-            let gw = Float(glyph.width)
-            let gh = Float(glyph.height)
-
-            let u0 = gx / Float(atlas.textureWidth)
-            let u1 = (gx + gw) / Float(atlas.textureWidth)
-
-            let v0 = (gy + gh) / Float(atlas.textureHeight)
-            let v1 = gy / Float(atlas.textureHeight)
-
-            let x0 = x + Float(glyph.bearingX)
-            let y0 = y - Float(glyph.bearingY) + Float(glyph.height)
-            let x1 = x0 + gw
-            let y1 = y0 - gh
-
-            // two triangles
-            vertices += [x0, y1, u0, v1,  x1, y1, u1, v1,  x1, y0, u1, v0]
-            vertices += [x1, y0, u1, v0,  x0, y0, u0, v0,  x0, y1, u0, v1]
-
-            x += Float(glyph.advance)
-        }
+        let vertices = atlas.vertices(for: text, x: x, y: y)
         guard !vertices.isEmpty else { return }
+        prepareDraw(color: color)
         drawVertices(vertices)
     }
 }
