@@ -4,13 +4,15 @@ public let slaySupportedStaticDimensions:[(width: Int32, height: Int32)] = [
 
     // MARK: Standards
 
-    (7680, 4320), // 8k
+    /*(7680, 4320), // 8k
     (3840, 2160), // 4k
     (2560, 1440), // 1440
-    (1920, 1080), // 1080
+    (1920, 1080), // 1080*/
     (1280, 720),  // 720
 
     // MARK: Misc
+
+    /*
 
     (1366, 768),
     (1280, 1200),
@@ -44,5 +46,5 @@ public let slaySupportedStaticDimensions:[(width: Int32, height: Int32)] = [
     (312, 390),   // Apple Watch Series 3 (42mm)
     (374, 446),   // Apple Watch Series 11 (42mm)
     (416, 496),   // Apple Watch Series 11 (46mm)
-    (422, 514),   // Apple Watch Ultra 3
+    (422, 514),   // Apple Watch Ultra 3*/
 ]
