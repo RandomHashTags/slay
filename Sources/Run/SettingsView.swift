@@ -7,7 +7,7 @@ import SlayUI
 struct SettingsView: View {
     var body: some View {
         List {
-            Rectangle()
+            Text("wtf")
         }
     }
 }

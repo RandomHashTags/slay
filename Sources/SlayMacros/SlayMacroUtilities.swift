@@ -1,4 +1,5 @@
 
+import SlayKit
 import SlayUI
 import SwiftSyntax
 import SwiftSyntaxMacros
@@ -7,10 +8,11 @@ import SwiftSyntaxMacros
 func appendArray(
     context: some MacroExpansionContext,
     array: ArrayElementListSyntax,
+    fontAtlas: borrowing FontAtlas,
     into data: inout [any StaticView]
 ) {
     for element in array {
-        guard let view = ViewMacro.parseView(context: context, expr: element.expression) else { continue }
+        guard let view = ViewMacro.parseView(context: context, expr: element.expression, fontAtlas: fontAtlas) else { continue }
         appendView(view, to: &data)
     }
 }
@@ -19,12 +21,13 @@ func appendArray(
 func appendCodeBlockList(
     context: some MacroExpansionContext,
     codeBlockList: CodeBlockItemListSyntax,
+    fontAtlas: borrowing FontAtlas,
     into data: inout [any StaticView]
 ) {
     for element in codeBlockList {
         switch element.item {
         case .expr(let expr):
-            guard let view = ViewMacro.parseView(context: context, expr: expr) else { continue }
+            guard let view = ViewMacro.parseView(context: context, expr: expr, fontAtlas: fontAtlas) else { continue }
             appendView(view, to: &data)
         default:
             break

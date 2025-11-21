@@ -13,9 +13,12 @@ struct ViewMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         var supportedStaticDimensions:[(width: Int32, height: Int32)] = slaySupportedStaticDimensions
         //fatalError(declaration.debugDescription)
+        var fontAtlas = slayDefaultFontAtlas
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
                 switch arg.label?.text {
+                case "font":
+                    break
                 case "supportedStaticDimensions":
                     supportedStaticDimensions.removeAll(keepingCapacity: true)
                     guard let array = arg.expression.as(ArrayExprSyntax.self)?.elements else { continue }
@@ -41,7 +44,8 @@ struct ViewMacro: MemberMacro {
                     case "body":
                         guard case let .getter(items) = binding.accessorBlock?.accessors else { continue }
                         guard let funcExpr = items.first?.item.as(FunctionCallExprSyntax.self) else { continue }
-                        body = parseView(context: context, expr: funcExpr)
+                        guard fontAtlas != nil else { continue }
+                        body = parseView(context: context, expr: funcExpr, fontAtlas: fontAtlas!)
                     default:
                         break
                     }
@@ -143,7 +147,7 @@ extension ViewMacro {
         nodeId: NodeId
     ) -> RenderCommand {
         let frame = arena.layout(of: nodeId)
-        /*guard let nodeBG = nodeBGs[nodeId.raw] else { // we have the -1 because the root node is present
+        /*guard let nodeBG = nodeBGs[nodeId.raw] else {
             // no color, no render
             return nil
         }*/
@@ -203,6 +207,12 @@ extension ViewMacro {
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             return id
+
+        case .staticText(let v):
+            let id = arena.create(v)
+            nodeBGs.append(v.backgroundColor)
+            return id
+
         default:
             fatalError("broken")
         }
@@ -215,6 +225,7 @@ extension ViewMacro {
         case staticHStack(StaticHStack)
         case staticList(StaticList)
         case staticRectangle(StaticRectangle)
+        case staticText(StaticText)
         case staticVStack(StaticVStack)
         case staticZStack(StaticZStack)
         case custom(String)
@@ -225,34 +236,41 @@ extension ViewMacro {
 extension ViewMacro {
     static func parseView(
         context: some MacroExpansionContext,
-        expr: some ExprSyntaxProtocol
+        expr: some ExprSyntaxProtocol,
+        fontAtlas: borrowing FontAtlas
     ) -> ViewType? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
-        return parseView(context: context, expr: f)
+        return parseView(context: context, expr: f, fontAtlas: fontAtlas)
     }
     static func parseView(
         context: some MacroExpansionContext,
-        expr: FunctionCallExprSyntax
+        expr: FunctionCallExprSyntax,
+        fontAtlas: borrowing FontAtlas
     ) -> ViewType? {
         switch expr.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text {
         case "StaticButton", "Button": return nil
         case "StaticList", "List":
-            guard let v = StaticList.parse(context: context, expr: expr) else { return nil }
+            guard let v = StaticList.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
             return .staticList(v)
 
         case "StaticHStack", "HStack":
-            guard let v = StaticHStack.parse(context: context, expr: expr) else { return nil }
+            guard let v = StaticHStack.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
             return .staticHStack(v)
         case "StaticVStack", "VStack":
-            guard let v = StaticVStack.parse(context: context, expr: expr) else { return nil }
+            guard let v = StaticVStack.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
             return .staticVStack(v)
         case "StaticZStack", "ZStack":
-            guard let v = StaticZStack.parse(context: context, expr: expr) else { return nil }
+            guard let v = StaticZStack.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
             return .staticZStack(v)
 
         case "StaticCircle", "Circle": return nil
         case "StaticRectangle", "Rectangle":
             return .staticRectangle(.parse(context: context, expr: expr))
+
+        case "StaticText", "Text":
+            guard let v = StaticText.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
+            return .staticText(v)
+
         default:
             return nil
         }

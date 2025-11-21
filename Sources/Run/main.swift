@@ -19,18 +19,15 @@ func load() {
         fps: 30
     )
 
-    let cmds = CustomView.Static_1280x720.renderCommands
+    guard let fontAtlas = slayDefaultFontAtlas else {
+        fatalError("failed to load font")
+    }
 
+    let cmds = CustomView.Static_1280x720.renderCommands
     var renderer = GLFWRenderer()
     for i in cmds.indices {
         renderer.push(cmds[i])
     }
-
-    let fontAtlas = FontAtlas(
-        ttfPath: "/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf",
-        pixelSize: slayDefaultFontSize
-    )
-
     renderer.render(
         fontAtlas: fontAtlas,
         windowSettings: settings

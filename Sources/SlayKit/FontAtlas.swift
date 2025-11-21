@@ -2,7 +2,7 @@
 import Freetype2
 
 // https://freetype.org/freetype2/docs/tutorial/step1.html
-public struct FontAtlas: ~Copyable {
+public struct FontAtlas: ~Copyable, @unchecked Sendable {
     public private(set) var textureWidth = 0
     public private(set) var textureHeight = 0
     public private(set) var glyphs = [UInt32:Glyph]()
@@ -20,14 +20,9 @@ public struct FontAtlas: ~Copyable {
         guard FT_Init_FreeType(&library) == 0 else {
             return nil
         }
-        var face:FT_Face! = nil
-        guard FT_New_Face(library, ttfPath, 0, &face) == 0 else {
+        guard newFace(ttfPath: ttfPath, pixelSize: pixelSize) == nil else {
             return nil
         }
-        guard FT_Set_Pixel_Sizes(face, UInt32(pixelSize), UInt32(pixelSize)) == 0 else {
-            return nil
-        }
-        self.face = face
         setup(characters: characters)
     }
 
@@ -39,6 +34,24 @@ public struct FontAtlas: ~Copyable {
         if let library {
             FT_Done_FreeType(library)
         }
+    }
+}
+
+// MARK: New face
+extension FontAtlas {
+    public mutating func newFace(
+        ttfPath: String,
+        pixelSize: Int
+    ) -> FT_Error? {
+        let newFaceResult = FT_New_Face(library, ttfPath, 0, &face)
+        guard newFaceResult == 0 else {
+            return newFaceResult
+        }
+        let setPixelSizeResult = FT_Set_Pixel_Sizes(face, UInt32(pixelSize), UInt32(pixelSize))
+        guard setPixelSizeResult == 0 else {
+            return setPixelSizeResult
+        }
+        return nil
     }
 }
 
