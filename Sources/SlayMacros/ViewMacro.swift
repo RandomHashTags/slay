@@ -90,7 +90,7 @@ struct ViewMacro: MemberMacro {
                     ],
                     .let,
                     name: "_\(raw: index)",
-                    type: TypeAnnotationSyntax(type: TypeSyntax(stringLiteral: "RenderCommand")),
+                    type: .init(type: TypeSyntax(stringLiteral: "RenderCommand")),
                     initializer: .init(value: ExprSyntax(stringLiteral: ".\(cmd)"))
                 )
                 members.append(.init(decl: variableDecl))
@@ -212,9 +212,6 @@ extension ViewMacro {
             let id = arena.create(v)
             nodeBGs.append(v.backgroundColor)
             return id
-
-        default:
-            fatalError("broken")
         }
     }
 }
@@ -228,7 +225,6 @@ extension ViewMacro {
         case staticText(StaticText)
         case staticVStack(StaticVStack)
         case staticZStack(StaticZStack)
-        case custom(String)
     }
 }
 

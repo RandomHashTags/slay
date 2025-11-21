@@ -44,9 +44,8 @@ func appendView(
     case .staticHStack(let v): data.append(v)
     case .staticList(let v): data.append(v)
     case .staticRectangle(let v): data.append(v)
+    case .staticText(let v): data.append(v)
     case .staticVStack(let v): data.append(v)
     case .staticZStack(let v): data.append(v)
-    default:
-        break
     }
 }
