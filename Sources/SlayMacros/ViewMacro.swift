@@ -53,36 +53,19 @@ struct ViewMacro: MemberMacro {
             }
         }
 
-        let arena = Arena()
-        let root = arena.create(
-            Style(
-                axis: .row,
-                padding: Insets(left: 8, top: 8, right: 8, bottom: 8)
-            ),
-            name: "root"
-        )
-        var nodeBGs = [Color?]()
-        nodeBGs.append(nil) // root node color
+        let engine = LayoutEngine()
         if let body {
-            arena.setChildren(root, [appendNode(arena: arena, view: body, nodeBGs: &nodeBGs)])
+            engine.setBody(body)
         }
 
         var decls = [DeclSyntax]()
         for (width, height) in supportedStaticDimensions {
-            arena.compute(root: root, available: .init(x: Float(width), y: Float(height)))
+            engine.compute(width: width, height: height)
 
-            var renderCommands = [RenderCommand]()
+            let renderCommands = engine.renderCommands()
             var members = MemberBlockItemListSyntax()
-            let cmd = renderCommandFor(arena: arena, nodeBGs: nodeBGs, nodeId: root)
-            renderCommands.append(cmd)
-            appendRenderCommands(
-                for: arena.nodes[root.raw].children,
-                arena: arena,
-                nodeBGs: nodeBGs,
-                renderCommands: &renderCommands
-            )
             for (index, cmd) in renderCommands.enumerated() {
-                let node = arena.nodes[index]
+                let node = engine.arena.nodes[index]
                 let variableDecl = VariableDeclSyntax(
                     leadingTrivia: "// \(node.name)\n",
                     modifiers: [
@@ -114,105 +97,6 @@ struct ViewMacro: MemberMacro {
             decls.append(.init(staticStruct))
         }
         return decls
-    }
-}
-
-// MARK: Append render commands
-extension ViewMacro {
-    private static func appendRenderCommands(
-        for children: [NodeId],
-        arena: Arena,
-        nodeBGs: [Color?],
-        renderCommands: inout [RenderCommand]
-    ) {
-        for childId in children {
-            let cmd = renderCommandFor(
-                arena: arena,
-                nodeBGs: nodeBGs,
-                nodeId: childId
-            )
-            renderCommands.append(cmd)
-            let subChildren = arena.nodes[childId.raw].children
-            appendRenderCommands(
-                for: subChildren,
-                arena: arena,
-                nodeBGs: nodeBGs,
-                renderCommands: &renderCommands
-            )
-        }
-    }
-    private static func renderCommandFor(
-        arena: Arena,
-        nodeBGs: [Color?],
-        nodeId: NodeId
-    ) -> RenderCommand {
-        let frame = arena.layout(of: nodeId)
-        /*guard let nodeBG = nodeBGs[nodeId.raw] else {
-            // no color, no render
-            return nil
-        }*/
-        let nodeBG = nodeBGs[nodeId.raw] ?? Color.rgba(0, 0, 0, 0)
-        return RenderCommand.rect(
-            frame: frame,
-            radius: 0,
-            color: (
-                Float(nodeBG.red) / 255,
-                Float(nodeBG.green) / 255,
-                Float(nodeBG.blue) / 255,
-                Float(nodeBG.alpha) / 255
-            )
-        )
-    }
-}
-
-// MARK: Append node
-extension ViewMacro {
-    static func appendNode(
-        arena: Arena,
-        view: ViewType,
-        nodeBGs: inout [Color?]
-    ) -> NodeId {
-        switch view {
-        case .staticList(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            for d in v.data {
-                nodeBGs.append(d.backgroundColor)
-            }
-            return id
-
-        case .staticHStack(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            for d in v.data {
-                nodeBGs.append(d.backgroundColor)
-            }
-            return id
-        case .staticVStack(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            for d in v.data {
-                nodeBGs.append(d.backgroundColor)
-            }
-            return id
-        case .staticZStack(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            for d in v.data {
-                nodeBGs.append(d.backgroundColor)
-            }
-            return id
-
-        case .staticRectangle(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            return id
-
-        case .staticText(let v):
-            let id = arena.create(v)
-            nodeBGs.append(v.backgroundColor)
-            return id
-        }
     }
 }
 
