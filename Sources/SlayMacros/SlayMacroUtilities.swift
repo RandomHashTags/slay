@@ -12,7 +12,7 @@ func appendArray(
     into data: inout [any StaticView]
 ) {
     for element in array {
-        guard let view = ViewMacro.parseView(context: context, expr: element.expression, fontAtlas: fontAtlas) else { continue }
+        guard let view = ViewType.parse(context: context, expr: element.expression, fontAtlas: fontAtlas) else { continue }
         appendView(view, to: &data)
     }
 }
@@ -27,7 +27,7 @@ func appendCodeBlockList(
     for element in codeBlockList {
         switch element.item {
         case .expr(let expr):
-            guard let view = ViewMacro.parseView(context: context, expr: expr, fontAtlas: fontAtlas) else { continue }
+            guard let view = ViewType.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { continue }
             appendView(view, to: &data)
         default:
             break
@@ -37,7 +37,7 @@ func appendCodeBlockList(
 
 // MARK: Append view
 func appendView(
-    _ viewType: ViewMacro.ViewType,
+    _ viewType: ViewType,
     to data: inout [any StaticView]
 ) {
     switch viewType {

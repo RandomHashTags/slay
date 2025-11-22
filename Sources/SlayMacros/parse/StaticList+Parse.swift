@@ -20,6 +20,14 @@ extension StaticList {
             fatalError(f.debugDescription)
             return nil
         }
+        for arg in f.arguments {
+            switch arg.label?.text {
+            case "backgroundColor":
+                list.backgroundColor = .parse(context: context, expr: arg.expression)
+            default:
+                break
+            }
+        }
         return list
     }
 }

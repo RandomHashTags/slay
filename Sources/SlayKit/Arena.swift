@@ -37,7 +37,7 @@ public final class Arena: @unchecked Sendable {
 
 // MARK: Node
 extension Arena {
-    public struct Node: Sendable {
+    public final class Node: @unchecked Sendable {
         public var style:Style
         public var children:[NodeId]
         public var layout:Rect

@@ -22,8 +22,8 @@ final class LayoutEngine {
         nodeViews.append(EmptyView())
     }
 
-    func setBody(_ body: ViewMacro.ViewType) {
-        arena.setChildren(root, [appendNode(arena: arena, view: body)])
+    func setBody(_ body: ViewType) {
+        arena.setChildren(root, [appendNode(arena: arena, viewType: body)])
     }
 }
 
@@ -102,45 +102,70 @@ extension LayoutEngine {
 extension LayoutEngine {
     func appendNode(
         arena: Arena,
-        view: ViewMacro.ViewType
+        view: some StaticView
     ) -> NodeId {
-        switch view {
+        if let v = view as? StaticRectangle {
+            return appendNode(arena: arena, viewType: .staticRectangle(v))
+        }
+        if let v = view as? StaticList {
+            return appendNode(arena: arena, viewType: .staticList(v))
+        }
+        if let v = view as? StaticHStack {
+            return appendNode(arena: arena, viewType: .staticHStack(v))
+        }
+        if let v = view as? StaticVStack {
+            return appendNode(arena: arena, viewType: .staticVStack(v))
+        }
+        if let v = view as? StaticZStack {
+            return appendNode(arena: arena, viewType: .staticZStack(v))
+        }
+        if let v = view as? StaticText {
+            return appendNode(arena: arena, viewType: .staticText(v))
+        }
+        fatalError("u forgor")
+    }
+
+    func appendNode(
+        arena: Arena,
+        viewType: ViewType
+    ) -> NodeId {
+        switch viewType {
         case .staticList(let v):
             nodeViews.append(v)
             let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for d in v.data {
-                nodeBackgroundColors.append(d.backgroundColor)
+            for v in v.data {
+                nodeBackgroundColors.append(v.backgroundColor)
+                appendNode(arena: arena, view: v)
             }
-            nodeViews.append(contentsOf: v.data)
             return id
 
         case .staticHStack(let v):
             nodeViews.append(v)
             let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for d in v.data {
-                nodeBackgroundColors.append(d.backgroundColor)
+            for v in v.data {
+                nodeBackgroundColors.append(v.backgroundColor)
+                appendNode(arena: arena, view: v)
             }
-            nodeViews.append(contentsOf: v.data)
             return id
         case .staticVStack(let v):
             nodeViews.append(v)
             let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for d in v.data {
-                nodeBackgroundColors.append(d.backgroundColor)
+            for v in v.data {
+                nodeBackgroundColors.append(v.backgroundColor)
+                appendNode(arena: arena, view: v)
             }
-            nodeViews.append(contentsOf: v.data)
             return id
         case .staticZStack(let v):
             nodeViews.append(v)
             let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for d in v.data {
-                nodeBackgroundColors.append(d.backgroundColor)
+            for v in v.data {
+                nodeBackgroundColors.append(v.backgroundColor)
+                appendNode(arena: arena, view: v)
             }
-            nodeViews.append(contentsOf: v.data)
             return id
 
         case .staticRectangle(let v):
