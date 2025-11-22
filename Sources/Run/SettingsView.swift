@@ -6,16 +6,16 @@ import SlayUI
 @View
 struct SettingsView: View {
     var body: some View {
-        VStack {
-            List {
+        List {
+            //List {
                 Text("Airplane Mode")
                 Text("Wi-Fi")
                 Text("Bluetooth")
                 Text("Cellular")
                 Text("Personal Hotspot")
                 Text("Battery")
-            }
-            List {
+            //}
+            /*List {
                 Text("General")
                 Text("Accessibility")
                 Text("Camera")
@@ -26,8 +26,8 @@ struct SettingsView: View {
                 Text("Siri")
                 Text("Standby")
                 Text("Wallpaper")
-            }
-            List {
+            }*/
+            /*List {
                 Text("Notifications")
                 Text("Sounds & Haptics")
                 Text("Focus")
@@ -45,7 +45,7 @@ struct SettingsView: View {
             }
             List {
                 Text("Apps")
-            }
+            }*/
         }
     }
 }

@@ -160,7 +160,7 @@ extension FontAtlas {
         var maxAscent:Float = 0
         var maxDescent:Float = 0
         for scalar in text.unicodeScalars {
-            guard let g = glyphs[UInt32(scalar.value)] else { continue }
+            guard let g = glyphs[scalar.value] else { continue }
 
             // horizontal width
             width += Float(g.advance)

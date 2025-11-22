@@ -77,29 +77,29 @@ extension Arena {
         origin: Vec2,
         available: Vec2
     ) -> Rect {
-        var node = nodes[id.raw]
+        let node = nodes[id.raw]
         let style = node.style
         let paddingX = style.padding.left + style.padding.right
         let paddingY = style.padding.top + style.padding.bottom
         let marginX = style.margin.left + style.margin.right
         let marginY = style.margin.top + style.margin.bottom
 
-        let hasFixedW = style.size.width != nil
-        let hasFixedH = style.size.height != nil
-        var targetW = Float(hasFixedW ? style.size.width! : available.x - marginX)
-        var targetH = Float(hasFixedH ? style.size.height! : available.y - marginY)
+        let hasFixedWidth = style.size.width != nil
+        let hasFixedHeight = style.size.height != nil
+        var targetWidth = Float(hasFixedWidth ? style.size.width! : available.x - marginX)
+        var targetHeight = Float(hasFixedHeight ? style.size.height! : available.y - marginY)
 
         if let aspectRatio = style.aspectRatio {
-            if !hasFixedW && hasFixedH {
-                targetW = targetH * aspectRatio
-            } else if hasFixedW && !hasFixedH {
-                targetH = targetW / aspectRatio
+            if !hasFixedWidth && hasFixedHeight {
+                targetWidth = targetHeight * aspectRatio
+            } else if hasFixedWidth && !hasFixedHeight {
+                targetHeight = targetWidth / aspectRatio
             }
         }
 
         if node.children.isEmpty {
-            let w = max(0, targetW - paddingX)
-            let h = max(0, targetH - paddingY)
+            let w = max(0, targetWidth - paddingX)
+            let h = max(0, targetHeight - paddingY)
             node.layout = Rect(
                 x: origin.x + style.margin.left,
                 y: origin.y + style.margin.top,
@@ -111,74 +111,76 @@ extension Arena {
         }
 
         // Flex layout (simplified): collect fixed-size and flex items, no min/max for brevity.
-        let mainAvail:Float
-        let crossAvail:Float
-        let getChildMainFixed:(Style) -> Float?
-        let getChildCrossFixed:(Style) -> Float?
+        let widthAvail:Float
+        let heightAvail:Float
+        let getChildWidth:(Style) -> Float?
+        let getChildHeight:(Style) -> Float?
         let getCursor:(_ x: Float, _ y: Float) -> Float
         let getChildAvailX:(_ main: Float, _ cross: Float) -> Float
         let getChildAvailY:(_ main: Float, _ cross: Float) -> Float
-        let getLaidCursorFloat:(Rect) -> Float
+        let getLaidWidth:(Rect) -> Float
         let mutateCursor:(_ xCursor: inout Float, _ yCursor: inout Float, _ amount: Float) -> Void
-        let getContentCrossFloat:(Rect) -> Float
+        let getContentHeight:(Rect) -> Float
         let getFinalWidthPadding:(Style) -> Float
         let getFinalHeightPadding:(Style) -> Float
         
         if style.axis == .row {
-            mainAvail = targetW - paddingX
-            crossAvail = targetH - paddingY
-            getChildMainFixed = { $0.size.width }
-            getChildCrossFixed = { $0.size.height }
+            widthAvail = targetWidth - paddingX
+            heightAvail = targetHeight - paddingY
+            getChildWidth = { $0.size.width }
+            getChildHeight = { $0.size.height }
             getCursor = { x, _ in x }
             getChildAvailX = { main, _ in main }
             getChildAvailY = { _, cross in cross }
-            getLaidCursorFloat = { $0.w }
+            getLaidWidth = { $0.w }
             mutateCursor = { _, yCursor, amount in yCursor += amount }
-            getContentCrossFloat = { $0.h }
+            getContentHeight = { $0.h }
             getFinalWidthPadding = { $0.padding.right }
             getFinalHeightPadding = { $0.padding.bottom }
         } else {
-            mainAvail = targetH - paddingY
-            crossAvail = targetW - paddingX
-            getChildMainFixed = { $0.size.height }
-            getChildCrossFixed = { $0.size.width }
+            widthAvail = targetHeight - paddingY
+            heightAvail = targetWidth - paddingX
+            getChildWidth = { $0.size.height }
+            getChildHeight = { $0.size.width }
             getCursor = { _, y in y }
             getChildAvailX = { _, cross in cross }
             getChildAvailY = { main, _ in main }
-            getLaidCursorFloat = { $0.h }
+            getLaidWidth = { $0.h }
             mutateCursor = { xCursor, _, amount in xCursor += amount }
-            getContentCrossFloat = { $0.w }
+            getContentHeight = { $0.w }
             getFinalWidthPadding = { $0.padding.bottom }
             getFinalHeightPadding = { $0.padding.right }
         }
+
+        // TODO: fix | final dimensions is miscalculated if we use nested children
 
         // Simple single-line or wrap lines
         var lines = [Line()]
         var current = Vec2(x: 0, y: 0)
         for child in node.children {
             let childStyle = nodes[child.raw].style
-            let childCrossFixed = getChildCrossFixed(childStyle)
-            let mainSize = getChildMainFixed(childStyle) ?? 0 // flex items initially 0
-            if style.wrap && current.x + mainSize > mainAvail && !lines.last!.items.isEmpty {
+            let childHeight = getChildHeight(childStyle)
+            let childWidth = getChildWidth(childStyle) ?? 0 // flex items initially 0
+            if style.wrap && current.x + childWidth > widthAvail && !lines.last!.items.isEmpty {
                 lines.append(Line())
                 current = Vec2(x: 0, y: 0)
             }
             lines[lines.count-1].items.append(child)
-            current.x += mainSize + style.gap
-            lines[lines.count-1].cross = max(lines.last!.cross, childCrossFixed ?? 0)
+            current.x += childWidth + style.gap
+            lines[lines.count-1].height = max(lines.last!.height, childHeight ?? 0)
         }
 
         var yCursor = style.padding.top
         var xCursor = style.padding.left
-        var contentMain: Float = 0
-        var contentCross: Float = 0
+        var contentWidth:Float = 0
+        var contentHeight:Float = 0
 
         for (lineIndex, line) in lines.enumerated() {
-            var fixed: Float = 0
-            var flexSum: Float = 0
+            var fixed:Float = 0
+            var flexSum:Float = 0
             for child in line.items {
                 let childStyle = nodes[child.raw].style
-                if let fixedMain = getChildMainFixed(childStyle) {
+                if let fixedMain = getChildWidth(childStyle) {
                     fixed += Float(fixedMain)
                 } else {
                     flexSum += childStyle.grow
@@ -187,19 +189,19 @@ extension Arena {
                     fixed += style.gap
                 }
             }
-            let free = max(0, mainAvail - fixed)
+            let free = max(0, widthAvail - fixed)
             var cursor = getCursor(xCursor, yCursor)
             for (lineItemIndex, child) in line.items.enumerated() {
                 let childStyle = nodes[child.raw].style
                 let childMain:Float
-                if let fixedMain = getChildMainFixed(childStyle) {
+                if let fixedMain = getChildWidth(childStyle) {
                     childMain = fixedMain
                 } else if flexSum > 0 {
                     childMain = free * (childStyle.grow / max(0.0001, flexSum))
                 } else {
                     childMain = 0
                 }
-                let childCross = getChildCrossFixed(childStyle) ?? line.cross
+                let childCross = getChildHeight(childStyle) ?? line.height
                 let childAvail = Vec2(
                     x: getChildAvailX(childMain, childCross),
                     y: getChildAvailY(childMain, childCross)
@@ -209,20 +211,20 @@ extension Arena {
                     y: origin.y + style.margin.top + getCursor(yCursor, cursor)
                 )
                 let laid = layoutNode(id: child, origin: childOrigin, available: childAvail)
-                cursor += getLaidCursorFloat(laid) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
-                contentMain = max(contentMain, cursor)
-                contentCross += getContentCrossFloat(laid)
+                cursor += getLaidWidth(laid) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
+                contentWidth = max(contentWidth, cursor)
+                contentHeight += getContentHeight(laid)
             }
-            mutateCursor(&xCursor, &yCursor, line.cross + style.gap)
+            mutateCursor(&xCursor, &yCursor, line.height + style.gap)
         }
 
-        let finalW = max(targetW, contentMain + getFinalWidthPadding(style))
-        let finalH = max(targetH, contentCross + getFinalHeightPadding(style))
+        let finalWidth = min(available.x, max(targetWidth, contentWidth + getFinalWidthPadding(style)))
+        let finalHeight = min(available.y, max(targetHeight, contentHeight + getFinalHeightPadding(style)))
         node.layout = Rect(
             x: origin.x + style.margin.left,
             y: origin.y + style.margin.top,
-            w: finalW,
-            h: finalH
+            w: finalWidth,
+            h: finalHeight
         )
         nodes[id.raw] = node
         return node.layout
@@ -233,7 +235,7 @@ extension Arena {
 extension Arena {
     struct Line {
         var items  = [NodeId]()
-        var cross:Float = 0
-        var main:Float = 0
+        var height:Float = 0
+        var width:Float = 0
     }
 }

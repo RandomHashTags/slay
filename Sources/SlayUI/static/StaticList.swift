@@ -9,7 +9,11 @@ public struct StaticList: StaticView {
         backgroundColor: Color? = nil
     ) {
         self.data = data
+        frame = Self.calculateFrame(data: data)
+        self.backgroundColor = backgroundColor
+    }
 
+    static func calculateFrame(data: [any StaticView]) -> StaticRectangle {
         var width:Int32? = nil
         var height:Int32? = nil
         for d in data {
@@ -20,7 +24,6 @@ public struct StaticList: StaticView {
                 height = (height ?? 0) + h
             }
         }
-        frame = .init(width: width, height: height)
-        self.backgroundColor = backgroundColor
+        return .init(width: width, height: height)
     }
 }

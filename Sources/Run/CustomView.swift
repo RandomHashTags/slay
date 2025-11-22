@@ -3,6 +3,7 @@ import Slay
 import SlayKit
 import SlayUI
 
+/*
 @View
 struct CustomView: View {
     var body: some View {
@@ -13,4 +14,4 @@ struct CustomView: View {
             Rectangle(width: 60, height: 90, backgroundColor: .rgba(0, 0, 255, 255))
         }
     }
-}
+}*/

@@ -27,20 +27,16 @@ extension Arena {
         )
         nodes.append(node)
 
-        var axis = Axis.column
-        var gap = Float(0) // TODO: fully support
         if let list = view as? StaticList {
-            gap = 8
             node.style.gap = 8
-            appendChildren(node: node, childViews: list.data, name: name, axis: axis, gap: gap, count: &count)
+            appendChildren(node: node, childViews: list.data, name: name, axis: .column, gap: 0, count: &count)
         } else if let stack = view as? StaticHStack {
-            axis = .row
             node.style.axis = .row
-            appendChildren(node: node, childViews: stack.data, name: name, axis: axis, gap: gap, count: &count)
+            appendChildren(node: node, childViews: stack.data, name: name, axis: .row, gap: 0, count: &count)
         } else if let stack = view as? StaticVStack {
-            appendChildren(node: node, childViews: stack.data, name: name, axis: axis, gap: gap, count: &count)
+            appendChildren(node: node, childViews: stack.data, name: name, axis: .column, gap: 0, count: &count)
         } else if let stack = view as? StaticZStack {
-            appendChildren(node: node, childViews: stack.data, name: name, axis: axis, gap: gap, count: &count)
+            appendChildren(node: node, childViews: stack.data, name: name, axis: .column, gap: 0, count: &count)
         }
         return parentId
     }
