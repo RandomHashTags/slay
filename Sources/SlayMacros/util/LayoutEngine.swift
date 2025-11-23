@@ -13,7 +13,7 @@ final class LayoutEngine {
     init() {
         root = arena.create(
             Style(
-                axis: .row,
+                axis: .vertical,
                 padding: Insets(left: 8, top: 8, right: 8, bottom: 8)
             ),
             name: "root"
@@ -142,7 +142,7 @@ extension LayoutEngine {
         case .staticHStack(let v):
             nodeViews.append(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
+            let id = arena.create(v, axis: .horizontal)
             for c in v.data {
                 appendNode(arena: arena, view: c)
             }

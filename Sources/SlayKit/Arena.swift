@@ -70,6 +70,11 @@ extension Arena {
         )
     }
 
+    
+}
+
+// MARK: Layout
+extension Arena {
     /// - Returns: The computed layout for the node.
     @discardableResult
     private func layoutNode(
@@ -124,7 +129,7 @@ extension Arena {
         let getFinalWidthPadding:(Style) -> Float
         let getFinalHeightPadding:(Style) -> Float
         
-        if style.axis == .row {
+        if style.axis == .horizontal {
             widthAvailable = targetWidth - paddingX
             heightAvailable = targetHeight - paddingY
             getChildWidth = { $0.size.width }
@@ -185,7 +190,7 @@ extension Arena {
                 } else {
                     flexSum += childStyle.grow
                 }
-                if !lineIndex._isPaddedLast(line.items.count) {
+                if lineIndex != line.items.count-1 { // is not last
                     fixed += style.gap
                 }
             }
@@ -246,3 +251,177 @@ extension Arena {
         var width:Float = 0
     }
 }
+
+/*
+// MARK: Layout new
+extension Arena {
+    /// - Returns: The computed layout for the node.
+    @discardableResult
+    private func layoutNodeNew(
+        id: NodeId,
+        origin: Vec2,
+        available: Vec2
+    ) -> Rect {
+        let node = nodes[id.raw]
+        let style = node.style
+        let paddingX = style.padding.left + style.padding.right
+        let paddingY = style.padding.top + style.padding.bottom
+        let marginX = style.margin.left + style.margin.right
+        let marginY = style.margin.top + style.margin.bottom
+
+        let hasFixedWidth = style.size.width != nil
+        let hasFixedHeight = style.size.height != nil
+        var targetWidth = Float(hasFixedWidth ? style.size.width! : available.x - marginX)
+        var targetHeight = Float(hasFixedHeight ? style.size.height! : available.y - marginY)
+
+        if let aspectRatio = style.aspectRatio {
+            if !hasFixedWidth && hasFixedHeight {
+                targetWidth = targetHeight * aspectRatio
+            } else if hasFixedWidth && !hasFixedHeight {
+                targetHeight = targetWidth / aspectRatio
+            }
+        }
+
+        if node.children.isEmpty {
+            let w = max(0, targetWidth - paddingX)
+            let h = max(0, targetHeight - paddingY)
+            node.layout = Rect(
+                x: origin.x + style.margin.left,
+                y: origin.y + style.margin.top,
+                w: w + paddingX,
+                h: h + paddingY
+            )
+            nodes[id.raw] = node
+            return node.layout
+        }
+
+        // Flex layout (simplified): collect fixed-size and flex items, no min/max for brevity.
+        let widthAvailable:Float
+        let heightAvailable:Float
+        let getChildWidth:(Style) -> Float?
+        let getChildHeight:(Style) -> Float?
+        let getOffset:(_ x: Float, _ y: Float) -> Float
+        let getChildAvailX:(_ main: Float, _ cross: Float) -> Float
+        let getChildAvailY:(_ main: Float, _ cross: Float) -> Float
+        let getContentWidth:(Rect) -> Float
+        let getContentHeight:(Rect) -> Float
+        let mutateOffset:(_ xOffset: inout Float, _ yOffset: inout Float, _ amount: Float) -> Void
+        let getFinalWidthPadding:(Style) -> Float
+        let getFinalHeightPadding:(Style) -> Float
+        
+        if style.axis == .horizontal {
+            widthAvailable = targetWidth - paddingX
+            heightAvailable = targetHeight - paddingY
+            getChildWidth = { $0.size.width }
+            getChildHeight = { $0.size.height }
+            getOffset = { x, _ in x }
+            getChildAvailX = { width, _ in width }
+            getChildAvailY = { _, height in height }
+            getContentWidth = { $0.w }
+            getContentHeight = { $0.h }
+            mutateOffset = { _, yOffset, amount in yOffset += amount }
+            getFinalWidthPadding = { $0.padding.right }
+            getFinalHeightPadding = { $0.padding.bottom }
+        } else {
+            widthAvailable = targetHeight - paddingY
+            heightAvailable = targetWidth - paddingX
+            getChildWidth = { $0.size.height }
+            getChildHeight = { $0.size.width }
+            getOffset = { _, y in y }
+            getChildAvailX = { _, height in height }
+            getChildAvailY = { width, _ in width }
+            getContentWidth = { $0.h }
+            getContentHeight = { $0.w }
+            mutateOffset = { xOffset, _, amount in xOffset += amount }
+            getFinalWidthPadding = { $0.padding.bottom }
+            getFinalHeightPadding = { $0.padding.right }
+        }
+
+        // TODO: fix: doesn't calculate 'grow' dimensions properly
+
+        let parentXOffset = getOffset(origin.x, origin.y) + style.padding.left + style.margin.left
+        let parentYOffset = getOffset(origin.y, origin.x) + style.padding.top + style.margin.top
+        var xOffset = parentXOffset
+        var yOffset = parentYOffset
+        var contentWidth:Float = 0
+        var contentHeight:Float = 0
+
+        for (parentIndex, parentId) in node.children.enumerated() {
+            var fixed:Float = 0
+            var flexSum:Float = 0
+            let parentNode = nodes[parentId.raw]
+            let parentStyle = parentNode.style
+            if let fixedWidth = getChildWidth(parentStyle) {
+                fixed += Float(fixedWidth)
+            } else {
+                flexSum += parentStyle.grow
+            }
+            if parentIndex != node.children.count-1 { // is not last
+                fixed += style.gap
+            }
+
+            let free = max(0, widthAvailable - fixed)
+            var childXOffset = getOffset(xOffset, yOffset)
+            var childYOffset = getOffset(yOffset, xOffset)
+            for (childIndex, childId) in parentNode.children.enumerated() {
+                let childNode = nodes[childId.raw]
+                let childStyle = childNode.style
+                let childWidth:Float
+                if let fixedWidth = getChildWidth(childStyle) {
+                    childWidth = fixedWidth
+                } else if flexSum > 0 {
+                    childWidth = free * (childStyle.grow / max(0.0001, flexSum))
+                } else {
+                    childWidth = 0
+                }
+                let childHeight = getChildHeight(childStyle) ?? 0
+                let childAvailable = Vec2(
+                    x: getChildAvailX(childWidth, childHeight),
+                    y: getChildAvailY(childWidth, childHeight)
+                )
+                let childOrigin = Vec2(
+                    x: parentXOffset + getOffset(childXOffset, xOffset),
+                    y: parentYOffset + getOffset(yOffset, childXOffset)
+                )
+                let childFrame = layoutNodeNew(id: childId, origin: childOrigin, available: childAvailable)
+                let gap = childIndex == parentNode.children.count-1 ? 0 : style.gap
+                if childStyle.axis == .vertical {
+                    childXOffset += /*childFrame.h + */gap
+                    childYOffset += childFrame.w + gap
+                    contentWidth = max(contentWidth, childFrame.w)
+                    contentHeight = max(contentHeight, childFrame.h)
+                } else {
+                    childXOffset += /*childFrame.w + */gap
+                    childYOffset += childFrame.h + gap
+                    contentWidth = max(contentWidth, childFrame.h)
+                    contentHeight = max(contentHeight, childFrame.w)
+                }
+            }
+            mutateOffset(&xOffset, &yOffset, style.gap)
+        }
+
+        let finalWidth:Float
+        let finalHeight:Float
+        if node.name == "root" {
+            finalWidth = max(targetWidth, contentWidth + getFinalWidthPadding(style))
+            finalHeight = max(targetHeight, contentHeight + getFinalHeightPadding(style))
+            node.layout = Rect(
+                x: origin.x,
+                y: origin.y,
+                w: finalWidth,
+                h: finalHeight
+            )
+        } else {
+            finalWidth = max(targetWidth, contentWidth + getFinalWidthPadding(style))
+            finalHeight = max(targetHeight, contentHeight + getFinalHeightPadding(style))
+            node.layout = Rect(
+                x: origin.x + style.padding.left + style.margin.left,
+                y: origin.y + style.padding.top + style.margin.top,
+                w: finalWidth,
+                h: finalHeight
+            )
+        }
+        nodes[id.raw] = node
+        return node.layout
+    }
+}*/
