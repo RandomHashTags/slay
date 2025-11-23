@@ -15,6 +15,7 @@ extension Arena {
     package func create(
         _ view: some StaticView,
         name: String? = nil,
+        gap: Float = 0,
         count: inout Int
     ) -> NodeId {
         let parentId = NodeId(raw: count)
@@ -22,14 +23,13 @@ extension Arena {
 
         let name = name ?? UUID().uuidString
         let node = Node(
-            style: view.style(axis: .column, gap: 0),
+            style: view.style(axis: .column, gap: gap),
             name: name
         )
         nodes.append(node)
 
         if let list = view as? StaticList {
-            node.style.gap = 8
-            appendChildren(node: node, childViews: list.data, name: name, axis: .column, gap: 0, count: &count)
+            appendChildren(node: node, childViews: list.data, name: name, axis: .column, gap: 8, count: &count)
         } else if let stack = view as? StaticHStack {
             node.style.axis = .row
             appendChildren(node: node, childViews: stack.data, name: name, axis: .row, gap: 0, count: &count)
@@ -61,7 +61,7 @@ extension Arena {
             if let list = child as? StaticList {
                 var i = 0
                 for c in list.data {
-                    childNode.children.append(create(c, name: childName + "Child\(i)", count: &count))
+                    childNode.children.append(create(c, name: childName + "Child\(i)", gap: 8, count: &count))
                     i += 1
                 }
             } else if let stack = child as? StaticHStack {
