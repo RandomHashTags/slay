@@ -132,52 +132,48 @@ extension LayoutEngine {
         switch viewType {
         case .staticList(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for v in v.data {
-                nodeBackgroundColors.append(v.backgroundColor)
-                appendNode(arena: arena, view: v)
+            let id = arena.create(v)
+            for c in v.data {
+                appendNode(arena: arena, view: c)
             }
             return id
 
         case .staticHStack(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for v in v.data {
-                nodeBackgroundColors.append(v.backgroundColor)
-                appendNode(arena: arena, view: v)
+            let id = arena.create(v)
+            for c in v.data {
+                appendNode(arena: arena, view: c)
             }
             return id
         case .staticVStack(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for v in v.data {
-                nodeBackgroundColors.append(v.backgroundColor)
-                appendNode(arena: arena, view: v)
+            let id = arena.create(v)
+            for c in v.data {
+                appendNode(arena: arena, view: c)
             }
             return id
         case .staticZStack(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
-            for v in v.data {
-                nodeBackgroundColors.append(v.backgroundColor)
-                appendNode(arena: arena, view: v)
+            let id = arena.create(v)
+            for c in v.data {
+                appendNode(arena: arena, view: c)
             }
             return id
 
         case .staticRectangle(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
+            let id = arena.create(v)
             return id
 
         case .staticText(let v):
             nodeViews.append(v)
-            let id = arena.create(v)
             nodeBackgroundColors.append(v.backgroundColor)
+            let id = arena.create(v)
             return id
         }
     }
