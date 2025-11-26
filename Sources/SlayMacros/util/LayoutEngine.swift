@@ -85,11 +85,11 @@ extension LayoutEngine {
             Float(nodeBG.blue) / 255,
             Float(nodeBG.alpha) / 255
         )
-        let targetView = nodeViews[nodeId.raw]
+        /*let targetView = nodeViews[nodeId.raw]
         if let staticText = targetView as? StaticText {
             let vertices = fontAtlas.vertices(for: staticText.text, x: frame.x, y: frame.y)
             return .textVertices(vertices: vertices, color: color)
-        }
+        }*/
         return .rect(
             frame: frame,
             radius: 0,
