@@ -1,12 +1,15 @@
 
 import SlayKit
 
-// MARK: Compute
 extension LayoutEngine {
     func layout(
         width: Int32,
         height: Int32
     ) {
+        root.style.size.width = Float(width)
+        root.style.size.height = Float(height)
+        root.frame.w = Float(width)
+        root.frame.h = Float(height)
         Self.layout(
             node: root,
             origin: .init(x: 0, y: 0),
@@ -15,7 +18,7 @@ extension LayoutEngine {
     }
 }
 
-// MARK: Calculate
+// MARK: Layout
 extension LayoutEngine {
     /// - Returns: The computed layout for the node.
     @discardableResult
@@ -52,19 +55,42 @@ extension LayoutEngine {
                 w: w + paddingX,
                 h: h + paddingY
             )
-            return node.frame
+        } else {
+            node.frame = layout(
+                origin: origin,
+                style: style,
+                targetWidth: targetWidth,
+                targetHeight: targetHeight,
+                paddingX: paddingX,
+                paddingY: paddingY,
+                children: node.children
+            )
         }
+        return node.frame
+    }
+}
 
+// MARK: Layout children
+extension LayoutEngine {
+    static func layout(
+        origin: Vec2,
+        style: Style,
+        targetWidth: Float,
+        targetHeight: Float,
+        paddingX: Float,
+        paddingY: Float,
+        children: [ViewNode]
+    ) -> Rect {
         // Flex layout (simplified): collect fixed-size and flex items, no min/max for brevity.
         let widthAvailable:Float
         let heightAvailable:Float
         let getChildWidth:(Style) -> Float?
         let getChildHeight:(Style) -> Float?
         let getOffset:(_ x: Float, _ y: Float) -> Float
-        let getChildAvailX:(_ main: Float, _ cross: Float) -> Float
-        let getChildAvailY:(_ main: Float, _ cross: Float) -> Float
-        let getLaidOffset:(Rect) -> Float
-        let mutateOffset:(_ xCursor: inout Float, _ yCursor: inout Float, _ amount: Float) -> Void
+        let getChildAvailX:(_ width: Float, _ height: Float) -> Float
+        let getChildAvailY:(_ width: Float, _ height: Float) -> Float
+        let getChildOffset:(Rect) -> Float
+        let mutateOffset:(_ xOffset: inout Float, _ yOffset: inout Float, _ amount: Float) -> Void
         let getContentHeight:(Rect) -> Float
         let getFinalWidthPadding:(Style) -> Float
         let getFinalHeightPadding:(Style) -> Float
@@ -77,9 +103,9 @@ extension LayoutEngine {
             getOffset = { x, _ in x }
             getChildAvailX = { width, _ in width }
             getChildAvailY = { _, height in height }
-            getLaidOffset = { $0.w }
+            getChildOffset = { $0.w }
             mutateOffset = { _, yOffset, amount in yOffset += amount }
-            getContentHeight = { $0.h }
+            getContentHeight = { $0.w }
             getFinalWidthPadding = { $0.padding.right }
             getFinalHeightPadding = { $0.padding.bottom }
         } else {
@@ -90,9 +116,9 @@ extension LayoutEngine {
             getOffset = { _, y in y }
             getChildAvailX = { _, height in height }
             getChildAvailY = { width, _ in width }
-            getLaidOffset = { $0.h }
+            getChildOffset = { $0.h }
             mutateOffset = { xOffset, _, amount in xOffset += amount }
-            getContentHeight = { $0.w }
+            getContentHeight = { $0.h }
             getFinalWidthPadding = { $0.padding.bottom }
             getFinalHeightPadding = { $0.padding.right }
         }
@@ -100,7 +126,7 @@ extension LayoutEngine {
         // Simple single-line or wrap lines
         var lines = [Line()]
         var current = Vec2(x: 0, y: 0)
-        for child in node.children {
+        for child in children {
             let childStyle = child.style
             let childHeight = getChildHeight(childStyle) ?? 0 // flex items initially 0
             let childWidth = getChildWidth(childStyle) ?? 0 // flex items initially 0
@@ -115,10 +141,17 @@ extension LayoutEngine {
 
         var yOffset = style.padding.top
         var xOffset = style.padding.left
-        var contentWidth:Float = 0
-        var contentHeight:Float = 0
+        var width:Float = 0
+        var height:Float = 0
 
         for (lineIndex, line) in lines.enumerated() {
+            let targetGap:Float
+            if lineIndex != line.items.count-1 { // is not last
+                targetGap = style.gap
+            } else {
+                targetGap = 0
+            }
+
             var fixed:Float = 0
             var flexSum:Float = 0
             for child in line.items {
@@ -128,9 +161,7 @@ extension LayoutEngine {
                 } else {
                     flexSum += childStyle.grow
                 }
-                if lineIndex != line.items.count-1 { // is not last
-                    fixed += style.gap
-                }
+                fixed += targetGap
             }
             let free = max(0, widthAvailable - fixed)
             var offset = getOffset(xOffset, yOffset)
@@ -145,7 +176,7 @@ extension LayoutEngine {
                     childWidth = 0
                 }
                 let childHeight = getChildHeight(childStyle) ?? line.height
-                let childAvail = Vec2(
+                let childAvailable = Vec2(
                     x: getChildAvailX(childWidth, childHeight),
                     y: getChildAvailY(childWidth, childHeight)
                 )
@@ -153,23 +184,25 @@ extension LayoutEngine {
                     x: origin.x + style.margin.left + getOffset(offset, xOffset),
                     y: origin.y + style.margin.top + getOffset(yOffset, offset)
                 )
-                let frame = layout(node: child, origin: childOrigin, available: childAvail)
-                offset += getLaidOffset(frame) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
-                contentWidth = max(contentWidth, offset)
-                contentHeight += getContentHeight(frame)
+                let frame = layout(
+                    node: child,
+                    origin: childOrigin,
+                    available: childAvailable
+                )
+                offset += getChildOffset(frame) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
+                width = max(width, offset)
+                height += getContentHeight(frame)
             }
             mutateOffset(&xOffset, &yOffset, line.height + style.gap)
         }
-
-        let finalW = max(targetWidth, contentWidth + getFinalWidthPadding(style))
-        let finalH = max(targetHeight, contentHeight + getFinalHeightPadding(style))
-        node.frame = Rect(
+        let finalW = max(targetWidth, width + getFinalWidthPadding(style))
+        let finalH = min(targetHeight, height + getFinalHeightPadding(style))
+        return Rect(
             x: origin.x + style.margin.left,
             y: origin.y + style.margin.top,
             w: finalW,
             h: finalH
         )
-        return node.frame
     }
 }
 

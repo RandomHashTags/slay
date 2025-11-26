@@ -1,9 +1,12 @@
 
 public struct StaticEmptyView: StaticView {
 
-    public var frame = StaticRectangle.zero
+    public var frame:StaticRectangle
     public var backgroundColor:Color? = nil
 
-    public init() {
+    public init(
+        frame: StaticRectangle = .zero
+    ) {
+        self.frame = frame
     }
 }
