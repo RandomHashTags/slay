@@ -49,7 +49,7 @@ struct SettingsView: View {
                 Text("Focus")
                 Text("Screen Time")
             }
-            /*List {
+            List {
                 Text("Face ID & Passcode")
                 Text("Emergency SOS")
                 Text("Privacy & Security")
@@ -61,7 +61,7 @@ struct SettingsView: View {
             }
             List {
                 Text("Apps")
-            }*/
+            }
         }
     }
 }

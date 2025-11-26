@@ -189,9 +189,10 @@ extension LayoutEngine {
                     origin: childOrigin,
                     available: childAvailable
                 )
-                offset += getChildOffset(frame) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
+                let gap = lineItemIndex == line.items.count-1 ? 0 : style.gap
+                offset += getChildOffset(frame) + gap
                 width = max(width, offset)
-                height += getContentHeight(frame)
+                height += getContentHeight(frame) + gap
             }
             mutateOffset(&xOffset, &yOffset, line.height + style.gap)
         }
