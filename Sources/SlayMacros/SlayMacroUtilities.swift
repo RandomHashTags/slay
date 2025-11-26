@@ -41,6 +41,7 @@ func appendView(
     to data: inout [any StaticView]
 ) {
     switch viewType {
+    case .staticEmpty(let v): data.append(v)
     case .staticHStack(let v): data.append(v)
     case .staticList(let v): data.append(v)
     case .staticRectangle(let v): data.append(v)

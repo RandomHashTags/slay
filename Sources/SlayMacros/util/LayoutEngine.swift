@@ -4,33 +4,19 @@ import SlayUI
 
 final class LayoutEngine {
 
-    let arena = Arena()
-    let root:NodeId
-
-    private var nodeBackgroundColors = [Color?]()
-    private var nodeViews = [any StaticView]()
+    let root:ViewNode
 
     init() {
-        root = arena.create(
-            Style(
-                axis: .vertical,
-                padding: Insets(left: 8, top: 8, right: 8, bottom: 8)
-            ),
-            name: "root"
+        root = .init(
+            type: .staticEmpty(.init()),
+            children: [],
+            name: "root",
         )
-        nodeBackgroundColors.append(nil)
-        nodeViews.append(EmptyView())
+        root.style.padding = .init(left: 8, top: 8, right: 8, bottom: 8)
     }
 
     func setBody(_ body: ViewType) {
-        arena.setChildren(root, [appendNode(arena: arena, viewType: body)])
-    }
-}
-
-// MARK: Compute
-extension LayoutEngine {
-    func compute(width: Int32, height: Int32) {
-        arena.compute(root: root, available: .init(x: Float(width), y: Float(height)))
+        root.children = [.init(type: body)]
     }
 }
 
@@ -38,12 +24,12 @@ extension LayoutEngine {
 extension LayoutEngine {
     func renderCommands(
         fontAtlas: borrowing FontAtlas
-    ) -> [RenderCommand] {
-        var renderCommands = [RenderCommand]()
-        let cmd = renderCommandFor(nodeId: root, fontAtlas: fontAtlas)
-        renderCommands.append(cmd)
+    ) -> [(RenderCommand, ViewNode)] {
+        var renderCommands = [(RenderCommand, ViewNode)]()
+        let cmd = renderCommandFor(view: root.type, fontAtlas: fontAtlas)
+        renderCommands.append((cmd, root))
         appendRenderCommands(
-            for: arena.nodes[root.raw].children,
+            for: root.children,
             fontAtlas: fontAtlas,
             renderCommands: &renderCommands
         )
@@ -51,34 +37,33 @@ extension LayoutEngine {
     }
 
     private func appendRenderCommands(
-        for children: [NodeId],
+        for children: [ViewNode],
         fontAtlas: borrowing FontAtlas,
-        renderCommands: inout [RenderCommand]
+        renderCommands: inout [(RenderCommand, ViewNode)]
     ) {
-        for childId in children {
+        for child in children {
             let cmd = renderCommandFor(
-                nodeId: childId,
+                view: child.type,
                 fontAtlas: fontAtlas
             )
-            renderCommands.append(cmd)
-            let subChildren = arena.nodes[childId.raw].children
+            renderCommands.append((cmd, child))
             appendRenderCommands(
-                for: subChildren,
+                for: child.children,
                 fontAtlas: fontAtlas,
                 renderCommands: &renderCommands
             )
         }
     }
     private func renderCommandFor(
-        nodeId: NodeId,
+        view: ViewType,
         fontAtlas: borrowing FontAtlas
     ) -> RenderCommand {
-        let frame = arena.layout(of: nodeId)
+        let frame = view.frame
         /*guard let nodeBG = nodeBGs[nodeId.raw] else {
             // no color, no render
             return nil
         }*/
-        let nodeBG = nodeBackgroundColors[nodeId.raw] ?? Color.rgba(0, 0, 0, 0)
+        let nodeBG = view.backgroundColor ?? Color.rgba(0, 0, 0, 0)
         let color = (
             Float(nodeBG.red) / 255,
             Float(nodeBG.green) / 255,
@@ -91,102 +76,9 @@ extension LayoutEngine {
             return .textVertices(vertices: vertices, color: color)
         }*/
         return .rect(
-            frame: frame,
+            frame: .init(x: Float(frame.x), y: Float(frame.y), w: Float(frame.width), h: Float(frame.height)),
             radius: 0,
             color: color
         )
-    }
-}
-
-// MARK: Append node
-extension LayoutEngine {
-    func appendNode(
-        arena: Arena,
-        view: some StaticView
-    ) -> NodeId {
-        if let v = view as? StaticRectangle {
-            return appendNode(arena: arena, viewType: .staticRectangle(v))
-        }
-        if let v = view as? StaticList {
-            return appendNode(arena: arena, viewType: .staticList(v))
-        }
-        if let v = view as? StaticHStack {
-            return appendNode(arena: arena, viewType: .staticHStack(v))
-        }
-        if let v = view as? StaticVStack {
-            return appendNode(arena: arena, viewType: .staticVStack(v))
-        }
-        if let v = view as? StaticZStack {
-            return appendNode(arena: arena, viewType: .staticZStack(v))
-        }
-        if let v = view as? StaticText {
-            return appendNode(arena: arena, viewType: .staticText(v))
-        }
-        fatalError("u forgor")
-    }
-
-    func appendNode(
-        arena: Arena,
-        viewType: ViewType
-    ) -> NodeId {
-        switch viewType {
-        case .staticList(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
-            for c in v.data {
-                appendNode(arena: arena, view: c)
-            }
-            return id
-
-        case .staticHStack(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v, axis: .horizontal)
-            for c in v.data {
-                appendNode(arena: arena, view: c)
-            }
-            return id
-        case .staticVStack(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
-            for c in v.data {
-                appendNode(arena: arena, view: c)
-            }
-            return id
-        case .staticZStack(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
-            for c in v.data {
-                appendNode(arena: arena, view: c)
-            }
-            return id
-
-        case .staticRectangle(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
-            return id
-
-        case .staticText(let v):
-            nodeViews.append(v)
-            nodeBackgroundColors.append(v.backgroundColor)
-            let id = arena.create(v)
-            return id
-        }
-    }
-}
-
-// MARK: Misc
-extension EmptyView: StaticView {
-    public var frame: SlayUI.StaticRectangle {
-        get { fatalError() }
-        set { fatalError() }
-    }
-
-    public var backgroundColor: SlayUI.Color? {
-        fatalError()
     }
 }

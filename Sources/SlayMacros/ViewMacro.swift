@@ -60,12 +60,11 @@ struct ViewMacro: MemberMacro {
 
         var decls = [DeclSyntax]()
         for (width, height) in supportedStaticDimensions {
-            engine.compute(width: width, height: height)
+            engine.layout(width: width, height: height)
 
             let renderCommands = engine.renderCommands(fontAtlas: fontAtlas)
             var members = MemberBlockItemListSyntax()
-            for (index, cmd) in renderCommands.enumerated() {
-                let node = engine.arena.nodes[index]
+            for (index, (cmd, node)) in renderCommands.enumerated() {
                 let variableDecl = VariableDeclSyntax(
                     leadingTrivia: "// \(node.name)\n",
                     modifiers: [

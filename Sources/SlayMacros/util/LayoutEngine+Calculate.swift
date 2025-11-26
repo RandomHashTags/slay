@@ -1,116 +1,58 @@
 
-public final class Arena: @unchecked Sendable {
-    package var nodes = [Node]()
-
-    public init() {
-    }
-
-    @discardableResult
-    public func create(
-        _ style: Style,
-        name: String
-    ) -> NodeId {
-        let id = NodeId(raw: nodes.count)
-        nodes.append(Node(style: style, name: name))
-        return id
-    }
-
-    public func setChildren(_ parent: NodeId, _ children: [NodeId]) {
-        nodes[parent.raw].children = children
-    }
-
-    public func updateStyle(_ id: NodeId, _ style: Style) {
-        nodes[id.raw].style = style
-    }
-
-    public func style(of id: NodeId) -> Style {
-        nodes[id.raw].style
-    }
-
-    public func layout(of id: NodeId) -> Rect {
-        nodes[id.raw].layout
-    }
-    public func layout(of id: Int) -> Rect {
-        nodes[id].layout
-    }
-}
-
-// MARK: Node
-extension Arena {
-    public final class Node: @unchecked Sendable {
-        public var style:Style
-        public var children:[NodeId]
-        public var layout:Rect
-        public var measured:Bool
-        public var name:String
-
-        public init(
-            style: Style,
-            children: [NodeId] = [],
-            layout: Rect = Rect(x: 0, y: 0, w: 0, h: 0),
-            measured: Bool = false,
-            name: String
-        ) {
-            self.style = style
-            self.children = children
-            self.layout = layout
-            self.measured = measured
-            self.name = name
-        }
-    }
-}
+import SlayKit
 
 // MARK: Compute
-extension Arena {
-    public func compute(root: NodeId, available: Vec2) {
-        _ = layoutNode(
-            id: root,
-            origin: Vec2(x: 0, y: 0),
-            available: available
+extension LayoutEngine {
+    func layout(
+        width: Int32,
+        height: Int32
+    ) {
+        Self.layout(
+            node: root,
+            origin: .init(x: 0, y: 0),
+            available: .init(x: Float(width), y: Float(height))
         )
     }
 }
 
-// MARK: Layout
-extension Arena {
+// MARK: Calculate
+extension LayoutEngine {
     /// - Returns: The computed layout for the node.
     @discardableResult
-    private func layoutNode(
-        id: NodeId,
+    static func layout(
+        node: ViewNode,
         origin: Vec2,
         available: Vec2
     ) -> Rect {
-        let node = nodes[id.raw]
         let style = node.style
         let paddingX = style.padding.left + style.padding.right
         let paddingY = style.padding.top + style.padding.bottom
         let marginX = style.margin.left + style.margin.right
         let marginY = style.margin.top + style.margin.bottom
 
-        let hasFixedW = style.size.width != nil
-        let hasFixedH = style.size.height != nil
-        var targetW = Float(hasFixedW ? style.size.width! : available.x - marginX)
-        var targetH = Float(hasFixedH ? style.size.height! : available.y - marginY)
+        let hasFixedWidth = style.size.width != nil
+        let hasFixedHehgith = style.size.height != nil
+        var targetWidth = Float(hasFixedWidth ? style.size.width! : available.x - marginX)
+        var targetHeight = Float(hasFixedHehgith ? style.size.height! : available.y - marginY)
 
         if let aspectRatio = style.aspectRatio {
-            if !hasFixedW && hasFixedH {
-                targetW = targetH * aspectRatio
-            } else if hasFixedW && !hasFixedH {
-                targetH = targetW / aspectRatio
+            if !hasFixedWidth && hasFixedHehgith {
+                targetWidth = targetHeight * aspectRatio
+            } else if hasFixedWidth && !hasFixedHehgith {
+                targetHeight = targetWidth / aspectRatio
             }
         }
 
         if node.children.isEmpty {
-            let w = max(0, targetW - paddingX)
-            let h = max(0, targetH - paddingY)
-            node.layout = Rect(
+            let w = max(0, targetWidth - paddingX)
+            let h = max(0, targetHeight - paddingY)
+            node.frame = Rect(
                 x: origin.x + style.margin.left,
                 y: origin.y + style.margin.top,
                 w: w + paddingX,
                 h: h + paddingY
             )
-            nodes[id.raw] = node
-            return node.layout
+            return node.frame
         }
 
         // Flex layout (simplified): collect fixed-size and flex items, no min/max for brevity.
@@ -128,8 +70,8 @@ extension Arena {
         let getFinalHeightPadding:(Style) -> Float
         
         if style.axis == .horizontal {
-            widthAvailable = targetW - paddingX
-            heightAvailable = targetH - paddingY
+            widthAvailable = targetWidth - paddingX
+            heightAvailable = targetHeight - paddingY
             getChildWidth = { $0.size.width }
             getChildHeight = { $0.size.height }
             getOffset = { x, _ in x }
@@ -141,8 +83,8 @@ extension Arena {
             getFinalWidthPadding = { $0.padding.right }
             getFinalHeightPadding = { $0.padding.bottom }
         } else {
-            widthAvailable = targetH - paddingY
-            heightAvailable = targetW - paddingX
+            widthAvailable = targetHeight - paddingY
+            heightAvailable = targetWidth - paddingX
             getChildWidth = { $0.size.height }
             getChildHeight = { $0.size.width }
             getOffset = { _, y in y }
@@ -159,16 +101,16 @@ extension Arena {
         var lines = [Line()]
         var current = Vec2(x: 0, y: 0)
         for child in node.children {
-            let childStyle = nodes[child.raw].style
-            let childCrossFixed = getChildHeight(childStyle)
-            let mainSize = getChildWidth(childStyle) ?? 0 // flex items initially 0
-            if style.wrap && current.x + mainSize > widthAvailable && !lines.last!.items.isEmpty {
+            let childStyle = child.style
+            let childHeight = getChildHeight(childStyle) ?? 0 // flex items initially 0
+            let childWidth = getChildWidth(childStyle) ?? 0 // flex items initially 0
+            if style.wrap && current.x + childWidth > widthAvailable && !lines.last!.items.isEmpty {
                 lines.append(Line())
                 current = Vec2(x: 0, y: 0)
             }
             lines[lines.count-1].items.append(child)
-            current.x += mainSize + style.gap
-            lines[lines.count-1].height = max(lines.last!.height, childCrossFixed ?? 0)
+            current.x += childWidth + style.gap
+            lines[lines.count-1].height = max(lines.last!.height, childHeight)
         }
 
         var yOffset = style.padding.top
@@ -180,7 +122,7 @@ extension Arena {
             var fixed:Float = 0
             var flexSum:Float = 0
             for child in line.items {
-                let childStyle = nodes[child.raw].style
+                let childStyle = child.style
                 if let fixedWidth = getChildWidth(childStyle) {
                     fixed += Float(fixedWidth)
                 } else {
@@ -193,7 +135,7 @@ extension Arena {
             let free = max(0, widthAvailable - fixed)
             var offset = getOffset(xOffset, yOffset)
             for (lineItemIndex, child) in line.items.enumerated() {
-                let childStyle = nodes[child.raw].style
+                let childStyle = child.style
                 let childWidth:Float
                 if let fixedWidth = getChildWidth(childStyle) {
                     childWidth = fixedWidth
@@ -211,7 +153,7 @@ extension Arena {
                     x: origin.x + style.margin.left + getOffset(offset, xOffset),
                     y: origin.y + style.margin.top + getOffset(yOffset, offset)
                 )
-                let frame = layoutNode(id: child, origin: childOrigin, available: childAvail)
+                let frame = layout(node: child, origin: childOrigin, available: childAvail)
                 offset += getLaidOffset(frame) + (lineItemIndex == line.items.count-1 ? 0 : style.gap)
                 contentWidth = max(contentWidth, offset)
                 contentHeight += getContentHeight(frame)
@@ -219,23 +161,22 @@ extension Arena {
             mutateOffset(&xOffset, &yOffset, line.height + style.gap)
         }
 
-        let finalW = max(targetW, contentWidth + getFinalWidthPadding(style))
-        let finalH = max(targetH, contentHeight + getFinalHeightPadding(style))
-        node.layout = Rect(
+        let finalW = max(targetWidth, contentWidth + getFinalWidthPadding(style))
+        let finalH = max(targetHeight, contentHeight + getFinalHeightPadding(style))
+        node.frame = Rect(
             x: origin.x + style.margin.left,
             y: origin.y + style.margin.top,
             w: finalW,
             h: finalH
         )
-        nodes[id.raw] = node
-        return node.layout
+        return node.frame
     }
 }
 
 // MARK: Line
-extension Arena {
+extension LayoutEngine {
     struct Line {
-        var items  = [NodeId]()
+        var items  = [ViewNode]()
         var height:Float = 0
         var width:Float = 0
     }
