@@ -221,47 +221,26 @@ extension LayoutEngine {
         // TODO: support dynamic width and height
         let widthAvailable:Float
         let heightAvailable:Float
-        let getChildHeight:(Style) -> Float?
         let getChildAvailX:(_ width: Float, _ height: Float) -> Float
         let getChildAvailY:(_ width: Float, _ height: Float) -> Float
-        let mutateWidth:(_ width: inout Float, _ amount: Float, _ gap: Float) -> Void
-        let mutateHeight:(_ height: inout Float, _ amount: Float, _ gap: Float) -> Void
-        let mutateOrigin:(_ origin: inout Vec2, _ width: Float, _ height: Float, _ gap: Float) -> Void
+        let mutateValues:@Sendable (inout Vec2, inout Float, Float, inout Float, Float, Float) -> Void
         let getFinalWidthPadding:(Style) -> Float
         let getFinalHeightPadding:(Style) -> Float
         
         if style.axis == .horizontal {
             widthAvailable = targetWidth - paddingX
             heightAvailable = targetHeight - paddingY
-            getChildHeight = { $0.size.height }
             getChildAvailX = { width, _ in width }
             getChildAvailY = { _, height in height }
-            mutateWidth = { width, amount, gap in
-                width += amount + gap
-            }
-            mutateHeight = { height, amount, gap in
-                height = max(height, amount)
-            }
-            mutateOrigin = { origin, width, height, gap in
-                origin.x += width + gap
-            }
+            mutateValues = mutateHorizontalValues
             getFinalWidthPadding = { $0.padding.right }
             getFinalHeightPadding = { $0.padding.bottom }
         } else {
             widthAvailable = targetHeight - paddingY
             heightAvailable = targetWidth - paddingX
-            getChildHeight = { $0.size.height }
             getChildAvailX = { _, height in height }
             getChildAvailY = { width, _ in width }
-            mutateWidth = { width, amount, gap in
-                width = max(width, amount)
-            }
-            mutateHeight = { height, amount, gap in
-                height += amount + gap
-            }
-            mutateOrigin = { origin, width, height, gap in
-                origin.y += height + gap
-            }
+            mutateValues = mutateVerticalValues
             getFinalWidthPadding = { $0.padding.bottom }
             getFinalHeightPadding = { $0.padding.right }
         }
@@ -285,7 +264,7 @@ extension LayoutEngine {
             } else {
                 childWidth = 0
             }
-            let childHeight = getChildHeight(childStyle) ?? 0
+            let childHeight = childStyle.size.height ?? 0
             let childAvailable = Vec2(
                 x: getChildAvailX(childWidth, childHeight),
                 y: getChildAvailY(childWidth, childHeight)
@@ -296,9 +275,14 @@ extension LayoutEngine {
                 available: childAvailable
             )
             let gap = lineItemIndex == children.count-1 ? 0 : style.gap
-            mutateWidth(&width, frame.w, gap)
-            mutateHeight(&height, frame.h, gap)
-            mutateOrigin(&childOrigin, frame.w, frame.h, gap)
+            mutateValues(
+                &childOrigin,
+                &width,
+                frame.w,
+                &height,
+                frame.h,
+                gap
+            )
         }
 
         let finalW = max(targetWidth, width + getFinalWidthPadding(style))
@@ -309,6 +293,32 @@ extension LayoutEngine {
             w: finalW,
             h: finalH
         )
+    }
+    private static func mutateHorizontalValues(
+        childOrigin: inout Vec2,
+        width: inout Float,
+        childWidth: Float,
+        height: inout Float,
+        childHeight: Float,
+        gap: Float
+    ) {
+        let v = childWidth + gap
+        childOrigin.x += v
+        width += v
+        height = max(height, childHeight)
+    }
+    private static func mutateVerticalValues(
+        childOrigin: inout Vec2,
+        width: inout Float,
+        childWidth: Float,
+        height: inout Float,
+        childHeight: Float,
+        gap: Float
+    ) {
+        let v = childHeight + gap
+        childOrigin.y += v
+        width = max(width, childWidth)
+        height += v
     }
 }
 
