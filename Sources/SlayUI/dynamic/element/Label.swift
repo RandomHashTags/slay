@@ -1,26 +1,20 @@
 
-public struct Label {
-    public var image:Image?
+public struct Label<Text: View, Icon: View>: View {
+    public var icon:Icon
     public var text:Text
-    public var frame:Rectangle
-    public var backgroundColor:Color?
 
     public init(
-        _ text: Text,
-        image: Image? = nil,
-        backgroundColor: Color? = nil
+        @ViewBuilder text: () -> Text,
+        @ViewBuilder icon: () -> Icon
     ) {
-        self.text = text
-        self.image = image
-
-        frame = .init(
-            width: (image?.frame._width ?? 0) + text.frame.width,
-            height: min(image?.frame._height ?? 0, text.frame.height)
-        )
-        self.backgroundColor = backgroundColor
+        self.text = text()
+        self.icon = icon()
     }
-}
 
-// MARK: View
-extension Label: View {
+    public var body: some View {
+        HStack {
+            icon
+            text
+        }
+    }
 }

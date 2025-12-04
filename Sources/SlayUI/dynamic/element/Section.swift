@@ -1,4 +1,5 @@
 
+/*
 public struct Section {
     public var text:Text
     public var data:[any View]
@@ -33,4 +34,4 @@ public struct Section {
 
 // MARK: View
 extension Section: View {
-}
+}*/

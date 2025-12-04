@@ -9,19 +9,27 @@ import SDLRenderer
 
 import SlayKit
 
-// Tiny demo: row with 3 boxes, middle one grows.
-let settings = WindowSettings(
-    width: 1280,
-    height: 720,
-    fps: 30
-)
 
-var renderer = GLFWRenderer()
-let cmds = CustomView.Static_1280x720.renderCommands
-for i in cmds.indices {
-    renderer.push(cmds[i])
+load()
+
+func load() {
+    let settings = WindowSettings(
+        width: 1280,
+        height: 720,
+        fps: 30
+    )
+
+    guard let fontAtlas = slayDefaultFontAtlas else {
+        fatalError("failed to load font")
+    }
+
+    let cmds = SettingsView.Static_1280x720.renderCommands
+    var renderer = GLFWRenderer()
+    for i in cmds.indices {
+        renderer.push(cmds[i])
+    }
+    renderer.render(
+        fontAtlas: fontAtlas,
+        windowSettings: settings
+    )
 }
-
-renderer.render(
-    windowSettings: settings
-)

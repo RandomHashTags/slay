@@ -1,16 +1,10 @@
 
-public struct Spacer {
-    public var frame:Rectangle
-    public var backgroundColor:Color?
+public struct Spacer: View {
 
-    public init(
-        backgroundColor: Color? = nil
-    ) {
-        frame = .init(width: nil, height: nil)
-        self.backgroundColor = backgroundColor
+    public init() {
     }
-}
 
-// MARK: View
-extension Spacer: View {
+    public var body: Never {
+        fatalError("tried to get body of a `Spacer`")
+    }
 }

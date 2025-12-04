@@ -1,4 +1,5 @@
 
 public enum Axis: Sendable {
-    case row, column
+    case horizontal
+    case vertical
 }
