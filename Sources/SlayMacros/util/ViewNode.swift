@@ -1,7 +1,7 @@
 
 import SlayKit
 
-final class ViewNode {
+final class ViewNode: CustomStringConvertible {
     let type:ViewType
     var children:[ViewNode]
     var style = Style(
@@ -40,5 +40,9 @@ final class ViewNode {
     var name: String {
         guard let customName else { return type.name }
         return type.name + " (\(customName))"
+    }
+
+    var description: String {
+        "ViewNode(type: .\(type), children: \(children), style: \(style), customName: \(customName ?? "nil"), frame: \(frame))"
     }
 }

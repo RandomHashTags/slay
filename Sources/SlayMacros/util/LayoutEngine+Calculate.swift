@@ -218,12 +218,11 @@ extension LayoutEngine {
         paddingY: Float,
         children: [ViewNode]
     ) -> Rect {
-        // TODO: support dynamic width and height
         let widthAvailable:Float
         let heightAvailable:Float
         let getChildAvailX:(_ width: Float, _ height: Float) -> Float
         let getChildAvailY:(_ width: Float, _ height: Float) -> Float
-        let mutateValues:@Sendable (inout Vec2, inout Float, Float, inout Float, Float, Float) -> Void
+        let mutateValues:@Sendable (Bool, inout Vec2, inout Float, inout Float, inout Float, Float, inout Float, inout Float, inout Float, Float, Float) -> Void
         let getFinalWidthPadding:(Style) -> Float
         let getFinalHeightPadding:(Style) -> Float
         
@@ -245,26 +244,34 @@ extension LayoutEngine {
             getFinalHeightPadding = { $0.padding.right }
         }
 
-        var width:Float = 0
-        var height:Float = 0
-
-        let free = max(0, widthAvailable)
-        var flexSum:Float = 0
+        var totalChildrenWidth:Float = 0
+        var largestChildWidth:Float = 0
+        var totalChildrenHeight:Float = 0
+        var largestChildHeight:Float = 0
         var childOrigin = Vec2(
             x: origin.x + style.padding.left + style.margin.left,
             y: origin.y + style.padding.top + style.margin.top
         )
-        for (lineItemIndex, child) in children.enumerated() {
+        var growableChildren = [(childIndex: Int, child: ViewNode)]()
+        var childWidthAvailable = widthAvailable
+        var childHeightAvailable = heightAvailable
+        for (childIndex, child) in children.enumerated() {
             let childStyle = child.style
+            var isGrowable = false
             let childWidth:Float
-            if let fixedWidth = childStyle.size.width {
-                childWidth = fixedWidth
-            } else if flexSum > 0 {
-                childWidth = free * (childStyle.grow / max(0.0001, flexSum))
+            if let w = childStyle.size.width {
+                childWidth = w
             } else {
-                childWidth = 0
+                childWidth = childWidthAvailable
+                isGrowable = true
             }
-            let childHeight = childStyle.size.height ?? 0
+            let childHeight:Float
+            if let h = childStyle.size.height {
+                childHeight = h
+            } else {
+                childHeight = childHeightAvailable
+                isGrowable = true
+            }
             let childAvailable = Vec2(
                 x: getChildAvailX(childWidth, childHeight),
                 y: getChildAvailY(childWidth, childHeight)
@@ -274,19 +281,55 @@ extension LayoutEngine {
                 origin: childOrigin,
                 available: childAvailable
             )
-            let gap = lineItemIndex == children.count-1 ? 0 : style.gap
+            if isGrowable {
+                growableChildren.append((childIndex, child))
+            }
+            let gap = childIndex == children.count-1 ? 0 : style.gap
             mutateValues(
+                isGrowable,
                 &childOrigin,
-                &width,
+                &totalChildrenWidth,
+                &childWidthAvailable,
+                &largestChildWidth,
                 frame.w,
-                &height,
+                &totalChildrenHeight,
+                &childHeightAvailable,
+                &largestChildHeight,
                 frame.h,
                 gap
             )
         }
+        if !growableChildren.isEmpty {
+            let freeWidth = getChildAvailX(widthAvailable - totalChildrenWidth, heightAvailable - totalChildrenHeight)
+            //fatalError("test;freeWidth=\(freeWidth);style.axis=\(style.axis);widthAvailable=\(widthAvailable);totalChildrenWidth=\(totalChildrenWidth);heightAvailable=\(heightAvailable);totalChildrenHeight=\(totalChildrenHeight)")
+            let childWidth = freeWidth / Float(growableChildren.count)
+            totalChildrenWidth = getChildAvailX(targetWidth, largestChildWidth)
+            totalChildrenHeight = getChildAvailY(largestChildHeight, targetHeight)
+            if style.axis == .horizontal {
+                for (var childIndex, child) in growableChildren {
+                    child.frame.w = childWidth
+                    childIndex += 1
+                    while childIndex < children.count {
+                        let sibling = children[childIndex]
+                        sibling.frame.x += childWidth
+                        childIndex += 1
+                    }
+                }
+            } else {
+                for (var childIndex, child) in growableChildren {
+                    child.frame.h = childWidth
+                    childIndex += 1
+                    while childIndex < children.count {
+                        let sibling = children[childIndex]
+                        sibling.frame.y += childWidth
+                        childIndex += 1
+                    }
+                }
+            }
+        }
 
-        let finalW = max(targetWidth, width + getFinalWidthPadding(style))
-        let finalH = max(targetHeight, height + getFinalHeightPadding(style))
+        let finalW = max(targetWidth, totalChildrenWidth + getFinalWidthPadding(style))
+        let finalH = max(targetHeight, totalChildrenHeight + getFinalHeightPadding(style))
         return Rect(
             x: origin.x + style.margin.left,
             y: origin.y + style.margin.top,
@@ -295,30 +338,56 @@ extension LayoutEngine {
         )
     }
     private static func mutateHorizontalValues(
+        isGrowable: Bool,
         childOrigin: inout Vec2,
         width: inout Float,
+        childWidthAvailable: inout Float,
+        largestChildWidth: inout Float,
         childWidth: Float,
         height: inout Float,
+        childHeightAvailable: inout Float,
+        largestChildHeight: inout Float,
         childHeight: Float,
         gap: Float
     ) {
-        let v = childWidth + gap
+        let v:Float
+        if isGrowable {
+            v = gap
+        } else {
+            v = childWidth + gap
+            height = max(height, childHeight)
+            largestChildWidth = max(childWidth, largestChildWidth)
+            largestChildHeight = max(childHeight, largestChildHeight)
+        }
         childOrigin.x += v
         width += v
-        height = max(height, childHeight)
+        childWidthAvailable -= v
     }
     private static func mutateVerticalValues(
+        isGrowable: Bool,
         childOrigin: inout Vec2,
         width: inout Float,
+        childWidthAvailable: inout Float,
+        largestChildWidth: inout Float,
         childWidth: Float,
         height: inout Float,
+        childHeightAvailable: inout Float,
+        largestChildHeight: inout Float,
         childHeight: Float,
         gap: Float
     ) {
-        let v = childHeight + gap
+        let v:Float
+        if isGrowable {
+            v = gap
+        } else {
+            v = childHeight + gap
+            width = max(width, childWidth)
+            largestChildWidth = max(childWidth, largestChildWidth)
+            largestChildHeight = max(childHeight, largestChildHeight)
+        }
         childOrigin.y += v
-        width = max(width, childWidth)
         height += v
+        childHeightAvailable -= v
     }
 }
 
