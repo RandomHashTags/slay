@@ -178,7 +178,7 @@ extension LayoutEngine {
                         childIndex += 1
                         while childIndex < children.count {
                             let sibling = children[childIndex]
-                            sibling.frame.x += childWidth
+                            offsetSiblingX(sibling: sibling, offset: childWidth)
                             childIndex += 1
                         }
                     }
@@ -191,17 +191,17 @@ extension LayoutEngine {
                 childWidth = largestChildWidth == 0 ? widthAvailable : largestChildWidth
                 childHeight = free / Float(growableHeightChildCount)
                 for (var childIndex, child, growable) in growableChildren {
+                    if growable.width {
+                        child.frame.w = childWidth
+                    }
                     if growable.height {
                         child.frame.h = childHeight
                         childIndex += 1
                         while childIndex < children.count {
                             let sibling = children[childIndex]
-                            sibling.frame.y += childHeight
+                            offsetSiblingY(sibling: sibling, offset: childHeight)
                             childIndex += 1
                         }
-                    }
-                    if growable.width {
-                        child.frame.w = childWidth
                     }
                 }
             }
@@ -214,6 +214,24 @@ extension LayoutEngine {
             w: finalW,
             h: finalH
         )
+    }
+    private static func offsetSiblingX(
+        sibling: ViewNode,
+        offset: Float
+    ) {
+        sibling.frame.x += offset
+        for child in sibling.children {
+            offsetSiblingX(sibling: child, offset: offset)
+        }
+    }
+    private static func offsetSiblingY(
+        sibling: ViewNode,
+        offset: Float
+    ) {
+        sibling.frame.y += offset
+        for child in sibling.children {
+            offsetSiblingY(sibling: child, offset: offset)
+        }
     }
 }
 
