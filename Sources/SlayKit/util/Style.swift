@@ -4,7 +4,6 @@ public struct Style: Sendable {
     public var wrap:Bool
     public var justify:Justify
     public var align:Align
-    public var grow:Float
     public var shrink:Float
     public var size:Size
     public var minSize:Size
@@ -20,7 +19,6 @@ public struct Style: Sendable {
         wrap: Bool = false,
         justify: Justify = .start,
         align: Align = .start,
-        grow: Float = 0,
         shrink: Float = 1,
         size: Size = .init(),
         minSize: Size = .init(),
@@ -35,7 +33,6 @@ public struct Style: Sendable {
         self.wrap = wrap
         self.justify = justify
         self.align = align
-        self.grow = grow
         self.shrink = shrink
         self.size = size
         self.minSize = minSize
