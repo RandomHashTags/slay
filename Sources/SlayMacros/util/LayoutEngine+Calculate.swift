@@ -57,6 +57,7 @@ extension LayoutEngine {
             )
         } else {
             node.frame = layout(
+                parent: node,
                 origin: origin,
                 style: style,
                 targetWidth: targetWidth,
@@ -73,6 +74,7 @@ extension LayoutEngine {
 // MARK: Layout children
 extension LayoutEngine {
     private static func layout(
+        parent: ViewNode,
         origin: Vec2,
         style: Style,
         targetWidth: Float,
@@ -107,11 +109,11 @@ extension LayoutEngine {
         )
         var growableWidthChildCount = 0
         var growableHeightChildCount = 0
-        var growableChildren = [(childIndex: Int, child: ViewNode, growable: (width: Bool, height: Bool))]()
+        var growableChildren = [(childIndex: Int, childNode: ViewNode, growable: (width: Bool, height: Bool))]()
         var childWidthAvailable = widthAvailable
         var childHeightAvailable = heightAvailable
-        for (childIndex, child) in children.enumerated() {
-            let childStyle = child.style
+        for (childIndex, childNode) in children.enumerated() {
+            let childStyle = childNode.style
             var growable = (width: false, height: false)
             let childWidth:Float
             if let w = childStyle.size.width {
@@ -134,13 +136,13 @@ extension LayoutEngine {
                 y: childHeight
             )
             let frame = layout(
-                node: child,
+                node: childNode,
                 origin: childOrigin,
                 available: childAvailable
             )
             let gap = childIndex == children.count-1 ? 0 : style.gap
             if growable.width || growable.height {
-                growableChildren.append((childIndex, child, growable))
+                growableChildren.append((childIndex, childNode, growable))
             }
             mutateValues(
                 growable,
@@ -160,14 +162,13 @@ extension LayoutEngine {
                 largestChildHeight = max(frame.h, largestChildHeight)
             }
         }
-        
+
+        var free:Float = 0
+        var childWidth:Float = 0
+        var childHeight:Float = 0
         if !growableChildren.isEmpty {
             growableWidthChildCount = max(1, growableWidthChildCount)
             growableHeightChildCount = max(1, growableHeightChildCount)
-
-            let free:Float
-            let childWidth:Float
-            let childHeight:Float
             if style.axis == .horizontal {
                 free = widthAvailable - totalChildrenWidth
                 childWidth = free / Float(growableWidthChildCount)
@@ -190,12 +191,12 @@ extension LayoutEngine {
                 free = heightAvailable - totalChildrenHeight
                 childWidth = largestChildWidth == 0 ? widthAvailable : largestChildWidth
                 childHeight = free / Float(growableHeightChildCount)
-                for (var childIndex, child, growable) in growableChildren {
+                for (var childIndex, childNode, growable) in growableChildren {
                     if growable.width {
-                        child.frame.w = childWidth
+                        childNode.frame.w = childWidth
                     }
                     if growable.height {
-                        child.frame.h = childHeight
+                        childNode.frame.h = childHeight
                         childIndex += 1
                         while childIndex < children.count {
                             let sibling = children[childIndex]
@@ -206,6 +207,18 @@ extension LayoutEngine {
                 }
             }
         }
+        parent.customName = """
+        
+        style=\(style)
+        growableChildren.count=\(growableChildren.count)
+        free=\(free)
+        childWidth=\(childWidth)
+        childHeight=\(childHeight)
+        targetWidth=\(targetWidth)
+        totalChildrenWidth=\(totalChildrenWidth)
+        targetHeight=\(targetHeight)
+        totalChildrenHeight=\(totalChildrenHeight)
+        """
         let finalW = max(targetWidth, totalChildrenWidth + getFinalWidthPadding(style))
         let finalH = max(targetHeight, totalChildrenHeight + getFinalHeightPadding(style))
         return Rect(
