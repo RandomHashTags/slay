@@ -209,13 +209,9 @@ extension LayoutEngine {
                 }
             }
         } else {
-            if style.axis == .horizontal {
-                finalW = totalChildrenWidth
-                parent.growable.width = false
-            } else {
-                finalH = totalChildrenHeight
-                parent.growable.height = false
-            }
+            parent.growable = (false, false)
+            finalW = totalChildrenWidth
+            finalH = totalChildrenHeight
         }
 
         parent.customName = """
