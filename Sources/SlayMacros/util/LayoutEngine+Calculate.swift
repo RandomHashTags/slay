@@ -109,18 +109,18 @@ extension LayoutEngine {
         )
         var growableWidthChildCount = 0
         var growableHeightChildCount = 0
-        var growableChildren = [(childIndex: Int, childNode: ViewNode, growable: (width: Bool, height: Bool))]()
+        var growableChildren = [(childIndex: Int, childNode: ViewNode)]()
         var childWidthAvailable = widthAvailable
         var childHeightAvailable = heightAvailable
         for (childIndex, childNode) in children.enumerated() {
+            childNode.growable = (false, false)
             let childStyle = childNode.style
-            var growable = (width: false, height: false)
             let childWidth:Float
             if let w = childStyle.size.width {
                 childWidth = w
             } else {
                 childWidth = childWidthAvailable
-                growable.width = true
+                childNode.growable.width = true
                 growableWidthChildCount += 1
             }
             let childHeight:Float
@@ -128,7 +128,7 @@ extension LayoutEngine {
                 childHeight = h
             } else {
                 childHeight = childHeightAvailable
-                growable.height = true
+                childNode.growable.height = true
                 growableHeightChildCount += 1
             }
             let childAvailable = Vec2(
@@ -141,11 +141,11 @@ extension LayoutEngine {
                 available: childAvailable
             )
             let gap = childIndex == children.count-1 ? 0 : style.gap
-            if growable.width || growable.height {
-                growableChildren.append((childIndex, childNode, growable))
+            if childNode.growable.width || childNode.growable.height {
+                growableChildren.append((childIndex, childNode))
             }
             mutateValues(
-                growable,
+                childNode.growable,
                 &childOrigin,
                 &totalChildrenWidth,
                 &childWidthAvailable,
@@ -155,14 +155,16 @@ extension LayoutEngine {
                 frame.h,
                 gap
             )
-            if !growable.width {
+            if !childNode.growable.width {
                 largestChildWidth = max(frame.w, largestChildWidth)
             }
-            if !growable.height {
+            if !childNode.growable.height {
                 largestChildHeight = max(frame.h, largestChildHeight)
             }
         }
 
+        var finalW = max(targetWidth, totalChildrenWidth + getFinalWidthPadding(style))
+        var finalH = max(targetHeight, totalChildrenHeight + getFinalHeightPadding(style))
         var free:Float = 0
         var childWidth:Float = 0
         var childHeight:Float = 0
@@ -173,8 +175,8 @@ extension LayoutEngine {
                 free = widthAvailable - totalChildrenWidth
                 childWidth = free / Float(growableWidthChildCount)
                 childHeight = largestChildHeight == 0 ? heightAvailable : largestChildHeight
-                for (var childIndex, child, growable) in growableChildren {
-                    if growable.width {
+                for (var childIndex, child) in growableChildren {
+                    if child.growable.width {
                         child.frame.w = childWidth
                         childIndex += 1
                         while childIndex < children.count {
@@ -183,7 +185,7 @@ extension LayoutEngine {
                             childIndex += 1
                         }
                     }
-                    if growable.height {
+                    if child.growable.height {
                         child.frame.h = childHeight
                     }
                 }
@@ -191,12 +193,12 @@ extension LayoutEngine {
                 free = heightAvailable - totalChildrenHeight
                 childWidth = largestChildWidth == 0 ? widthAvailable : largestChildWidth
                 childHeight = free / Float(growableHeightChildCount)
-                for (var childIndex, childNode, growable) in growableChildren {
-                    if growable.width {
-                        childNode.frame.w = childWidth
+                for (var childIndex, child) in growableChildren {
+                    if child.growable.width {
+                        child.frame.w = childWidth
                     }
-                    if growable.height {
-                        childNode.frame.h = childHeight
+                    if child.growable.height {
+                        child.frame.h = childHeight
                         childIndex += 1
                         while childIndex < children.count {
                             let sibling = children[childIndex]
@@ -206,7 +208,16 @@ extension LayoutEngine {
                     }
                 }
             }
+        } else {
+            if style.axis == .horizontal {
+                finalW = totalChildrenWidth
+                parent.growable.width = false
+            } else {
+                finalH = totalChildrenHeight
+                parent.growable.height = false
+            }
         }
+
         parent.customName = """
         
         style=\(style)
@@ -218,9 +229,9 @@ extension LayoutEngine {
         totalChildrenWidth=\(totalChildrenWidth)
         targetHeight=\(targetHeight)
         totalChildrenHeight=\(totalChildrenHeight)
+        finalW=\(finalW)
+        finalH=\(finalH)
         """
-        let finalW = max(targetWidth, totalChildrenWidth + getFinalWidthPadding(style))
-        let finalH = max(targetHeight, totalChildrenHeight + getFinalHeightPadding(style))
         return Rect(
             x: origin.x + style.margin.left,
             y: origin.y + style.margin.top,

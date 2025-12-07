@@ -11,6 +11,7 @@ final class ViewNode: CustomStringConvertible {
     )
     var customName:String? = nil
     var frame = Rect(x: 0, y: 0, w: 0, h: 0)
+    var growable:(width: Bool, height: Bool) = (true, true)
 
     init(
         type: ViewType,
@@ -39,6 +40,6 @@ final class ViewNode: CustomStringConvertible {
     }
 
     var description: String {
-        "ViewNode(type: .\(type), children: \(children), style: \(style), name: \(name), frame: \(frame))"
+        "ViewNode(type: .\(type), children: \(children), style: \(style), name: \(name), frame: \(frame), growable: \(growable))"
     }
 }
