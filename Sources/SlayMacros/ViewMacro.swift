@@ -65,8 +65,14 @@ struct ViewMacro: MemberMacro {
             let renderCommands = engine.renderCommands(fontAtlas: fontAtlas)
             var members = MemberBlockItemListSyntax()
             for (index, (cmd, node)) in renderCommands.enumerated() {
+                let leadingTrivia:Trivia
+                if node.customName != nil {
+                    leadingTrivia = "/* \(node.name)\n*/\n"
+                } else {
+                    leadingTrivia = "// \(node.name)\n"
+                }
                 let variableDecl = VariableDeclSyntax(
-                    leadingTrivia: "// \(node.name)\n",
+                    leadingTrivia: leadingTrivia,
                     modifiers: [
                         .init(name: .keyword(.static))
                     ],

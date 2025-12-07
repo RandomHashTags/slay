@@ -1,7 +1,7 @@
 
 import SlayKit
 
-final class ViewNode {
+final class ViewNode: CustomStringConvertible {
     let type:ViewType
     var children:[ViewNode]
     var style = Style(
@@ -11,6 +11,7 @@ final class ViewNode {
     )
     var customName:String? = nil
     var frame = Rect(x: 0, y: 0, w: 0, h: 0)
+    var growable:(width: Bool, height: Bool) = (true, true)
 
     init(
         type: ViewType,
@@ -25,14 +26,10 @@ final class ViewNode {
         self.customName = name
         if let width = type.frame._width {
             style.size.width = Float(width)
-        } else {
-            style.grow = 1
         }
         if let height = type.frame._height {
             style.size.height = Float(height)
-        } else {
-            style.grow = 1
-        }
+        } 
         style.axis = type.axis
         style.gap = type.gap
     }
@@ -40,5 +37,9 @@ final class ViewNode {
     var name: String {
         guard let customName else { return type.name }
         return type.name + " (\(customName))"
+    }
+
+    var description: String {
+        "ViewNode(type: .\(type), children: \(children), style: \(style), name: \(name), frame: \(frame), growable: \(growable))"
     }
 }
