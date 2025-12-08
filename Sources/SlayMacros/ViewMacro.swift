@@ -73,7 +73,7 @@ struct ViewMacro: MemberMacro {
                 } else {
                     leadingTrivia = "// \(node.name)\n"
                 }
-                if cmd.color != (0, 0, 0, 0) {
+                if cmd.color.3 > 0 { // alpha/opacity is greater than zero
                     renderedCommandIndexes.insert(index)
                 } else {
                     leadingTrivia += "//"
