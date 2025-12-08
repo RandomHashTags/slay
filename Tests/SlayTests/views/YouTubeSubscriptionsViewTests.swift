@@ -83,16 +83,44 @@ extension YouTubeSubscriptionsViewTests {
             color: (1.0, 1.0, 1.0, 1.0))
         )
 
-        // first video
+        // shorts (HStack)
         #expect(TargetView.Static_1280x720._20 == .rect(
             frame: SlayKit.Rect(x: 8.0, y: 107.0, w: 466.0, h: 200.0),
             radius: 0.0,
             color: (0.0, 0.0, 0.0, 0.0))
         )
 
-        // second video
+        // first short
         #expect(TargetView.Static_1280x720._21 == .rect(
             frame: SlayKit.Rect(x: 8.0, y: 107.0, w: 150.0, h: 200.0),
+            radius: 0.0,
+            color: (1.0, 1.0, 1.0, 1.0))
+        )
+
+        // second short
+        #expect(TargetView.Static_1280x720._22 == .rect(
+            frame: SlayKit.Rect(x: 166.0, y: 107.0, w: 150.0, h: 200.0),
+            radius: 0.0,
+            color: (1.0, 1.0, 1.0, 1.0))
+        )
+
+        // third short
+        #expect(TargetView.Static_1280x720._23 == .rect(
+            frame: SlayKit.Rect(x: 324.0, y: 107.0, w: 150.0, h: 200.0),
+            radius: 0.0,
+            color: (1.0, 1.0, 1.0, 1.0))
+        )
+
+        // first video
+        #expect(TargetView.Static_1280x720._24 == .rect(
+            frame: SlayKit.Rect(x: 8.0, y: 315.0, w: 466.0, h: 200.0),
+            radius: 0.0,
+            color: (1.0, 1.0, 1.0, 1.0))
+        )
+
+        // second video
+        #expect(TargetView.Static_1280x720._25 == .rect(
+            frame: SlayKit.Rect(x: 8.0, y: 523.0, w: 466.0, h: 200.0),
             radius: 0.0,
             color: (1.0, 1.0, 1.0, 1.0))
         )
