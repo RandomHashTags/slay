@@ -8,7 +8,7 @@ extension ViewType {
     static func parse(
         context: some MacroExpansionContext,
         expr: some ExprSyntaxProtocol,
-        fontAtlas: borrowing FontAtlas
+        fontAtlas: borrowing FontAtlas?
     ) -> ViewType? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
         return parse(context: context, expr: f, fontAtlas: fontAtlas)
@@ -16,7 +16,7 @@ extension ViewType {
     static func parse(
         context: some MacroExpansionContext,
         expr: FunctionCallExprSyntax,
-        fontAtlas: borrowing FontAtlas
+        fontAtlas: borrowing FontAtlas?
     ) -> ViewType? {
         switch expr.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text {
         case "StaticButton", "Button": return nil
@@ -39,7 +39,7 @@ extension ViewType {
             return .staticRectangle(.parse(context: context, expr: expr))
 
         case "StaticText", "Text":
-            guard let v = StaticText.parse(context: context, expr: expr, fontAtlas: fontAtlas) else { return nil }
+            guard fontAtlas != nil, let v = StaticText.parse(context: context, expr: expr, fontAtlas: fontAtlas!) else { return nil }
             return .staticText(v)
 
         default:

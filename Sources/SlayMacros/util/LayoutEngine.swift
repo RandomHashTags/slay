@@ -23,7 +23,7 @@ final class LayoutEngine {
 // MARK: Render commands
 extension LayoutEngine {
     func renderCommands(
-        fontAtlas: borrowing FontAtlas
+        fontAtlas: borrowing FontAtlas?
     ) -> [(RenderCommand, ViewNode)] {
         var renderCommands = [(RenderCommand, ViewNode)]()
         let cmd = renderCommandFor(node: root, fontAtlas: fontAtlas)
@@ -38,7 +38,7 @@ extension LayoutEngine {
 
     private func appendRenderCommands(
         for children: [ViewNode],
-        fontAtlas: borrowing FontAtlas,
+        fontAtlas: borrowing FontAtlas?,
         renderCommands: inout [(RenderCommand, ViewNode)]
     ) {
         for child in children {
@@ -56,7 +56,7 @@ extension LayoutEngine {
     }
     private func renderCommandFor(
         node: ViewNode,
-        fontAtlas: borrowing FontAtlas
+        fontAtlas: borrowing FontAtlas?
     ) -> RenderCommand {
         let frame = node.frame
         /*guard let nodeBG = nodeBGs[nodeId.raw] else {

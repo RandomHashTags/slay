@@ -13,7 +13,7 @@ struct ViewMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         var supportedStaticDimensions:[(width: Int32, height: Int32)] = slaySupportedStaticDimensions
         //fatalError(declaration.debugDescription)
-        var fontAtlas:FontAtlas! = slayDefaultFontAtlas
+        var fontAtlas = slayDefaultFontAtlas
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
                 switch arg.label?.text {
