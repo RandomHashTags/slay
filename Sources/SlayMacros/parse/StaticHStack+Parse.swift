@@ -8,7 +8,7 @@ extension StaticHStack {
     public static func parse(
         context: some MacroExpansionContext,
         expr: some ExprSyntaxProtocol,
-        fontAtlas: borrowing FontAtlas
+        fontAtlas: borrowing FontAtlas?
     ) -> Self? {
         guard let f = expr.as(FunctionCallExprSyntax.self) else { return nil }
         var stack = Self()

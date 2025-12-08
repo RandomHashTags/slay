@@ -8,7 +8,7 @@ import SwiftSyntaxMacros
 func appendArray(
     context: some MacroExpansionContext,
     array: ArrayElementListSyntax,
-    fontAtlas: borrowing FontAtlas,
+    fontAtlas: borrowing FontAtlas?,
     into data: inout [any StaticView]
 ) {
     for element in array {
@@ -21,7 +21,7 @@ func appendArray(
 func appendCodeBlockList(
     context: some MacroExpansionContext,
     codeBlockList: CodeBlockItemListSyntax,
-    fontAtlas: borrowing FontAtlas,
+    fontAtlas: borrowing FontAtlas?,
     into data: inout [any StaticView]
 ) {
     for element in codeBlockList {
