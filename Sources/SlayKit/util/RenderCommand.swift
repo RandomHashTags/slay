@@ -17,4 +17,12 @@ public enum RenderCommand: Sendable {
         vertices: [Float],
         color: (Float, Float, Float, Float)
     )
+
+    public var color: (Float, Float, Float, Float) {
+        switch self {
+        case .rect(_, _, let c): c
+        case .text(_, _, _, let c): c
+        case .textVertices(_, let c): c
+        }
+    }
 }

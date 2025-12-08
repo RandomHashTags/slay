@@ -63,13 +63,20 @@ struct ViewMacro: MemberMacro {
             engine.layout(width: width, height: height)
 
             let renderCommands = engine.renderCommands(fontAtlas: fontAtlas)
+            var renderedCommandIndexes = Set<Int>()
+            renderedCommandIndexes.reserveCapacity(renderCommands.count)
             var members = MemberBlockItemListSyntax()
             for (index, (cmd, node)) in renderCommands.enumerated() {
-                let leadingTrivia:Trivia
+                var leadingTrivia:Trivia
                 if node.customName != nil {
                     leadingTrivia = "/* \(node.name)\n*/\n"
                 } else {
                     leadingTrivia = "// \(node.name)\n"
+                }
+                if cmd.color.3 > 0 { // alpha/opacity is greater than zero
+                    renderedCommandIndexes.insert(index)
+                } else {
+                    leadingTrivia += "//"
                 }
                 let variableDecl = VariableDeclSyntax(
                     leadingTrivia: leadingTrivia,
@@ -83,15 +90,18 @@ struct ViewMacro: MemberMacro {
                 )
                 members.append(.init(decl: variableDecl))
             }
-
+            let cmds:[String] = (0..<renderCommands.count).compactMap({
+                guard renderedCommandIndexes.contains($0) else { return nil }
+                return "Self._\($0)"
+            })
             members.append(.init(decl: VariableDeclSyntax.init(
                 modifiers: [
                     .init(name: .keyword(.static))
                 ],
                 .let,
                 name: "renderCommands",
-                type: .init(type: TypeSyntax(stringLiteral: "[\(renderCommands.count) of RenderCommand]")),
-                initializer: .init(value: ExprSyntax(stringLiteral: "[\((0..<renderCommands.count).map({ "Self._\($0)" }).joined(separator: ", "))]"))
+                type: .init(type: TypeSyntax(stringLiteral: "[\(cmds.count) of RenderCommand]")),
+                initializer: .init(value: ExprSyntax(stringLiteral: "[\(cmds.joined(separator: ", "))]"))
             )))
 
             let staticStruct = StructDeclSyntax(
