@@ -14,11 +14,16 @@ struct ViewMacro: MemberMacro {
         var supportedStaticDimensions:[(width: Int32, height: Int32)] = slaySupportedStaticDimensions
         //fatalError(declaration.debugDescription)
         var fontAtlas = slayDefaultFontAtlas
+        var settings = SlayMacroExpansionSettings()
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
             for arg in arguments {
                 switch arg.label?.text {
                 case "font":
                     break
+                case "renderInvisibleItems":
+                    settings.renderInvisibleItems = arg.expression.as(BooleanLiteralExprSyntax.self)?.literal.text == "true"
+                case "renderTextAsRectangles":
+                    settings.renderTextAsRectangles = arg.expression.as(BooleanLiteralExprSyntax.self)?.literal.text == "true"
                 case "supportedStaticDimensions":
                     supportedStaticDimensions.removeAll(keepingCapacity: true)
                     guard let array = arg.expression.as(ArrayExprSyntax.self)?.elements else { continue }
@@ -62,9 +67,9 @@ struct ViewMacro: MemberMacro {
         for (width, height) in supportedStaticDimensions {
             engine.layout(width: width, height: height)
 
-            let renderCommands = engine.renderCommands(fontAtlas: fontAtlas)
-            var renderedCommandIndexes = Set<Int>()
-            renderedCommandIndexes.reserveCapacity(renderCommands.count)
+            let renderCommands = engine.renderCommands(fontAtlas: fontAtlas, settings: settings)
+            var visibleItemIndexes = Set<Int>()
+            visibleItemIndexes.reserveCapacity(renderCommands.count)
             var members = MemberBlockItemListSyntax()
             for (index, (cmd, node)) in renderCommands.enumerated() {
                 var leadingTrivia:Trivia
@@ -73,8 +78,8 @@ struct ViewMacro: MemberMacro {
                 } else {
                     leadingTrivia = "// \(node.name)\n"
                 }
-                if cmd.color.3 > 0 { // alpha/opacity is greater than zero
-                    renderedCommandIndexes.insert(index)
+                if settings.renderInvisibleItems || cmd.color.3 > 0 { // alpha/opacity is greater than zero
+                    visibleItemIndexes.insert(index)
                 } else {
                     leadingTrivia += "//"
                 }
@@ -90,10 +95,15 @@ struct ViewMacro: MemberMacro {
                 )
                 members.append(.init(decl: variableDecl))
             }
-            let cmds:[String] = (0..<renderCommands.count).compactMap({
-                guard renderedCommandIndexes.contains($0) else { return nil }
-                return "Self._\($0)"
-            })
+            let cmds:[String]
+            if settings.renderInvisibleItems {
+                cmds = (0..<renderCommands.count).map({ "Self._\($0)" })
+            } else {
+                cmds = (0..<renderCommands.count).compactMap({
+                    guard visibleItemIndexes.contains($0) else { return nil }
+                    return "Self._\($0)"
+                })
+            }
             members.append(.init(decl: VariableDeclSyntax.init(
                 modifiers: [
                     .init(name: .keyword(.static))

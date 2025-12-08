@@ -23,14 +23,16 @@ final class LayoutEngine {
 // MARK: Render commands
 extension LayoutEngine {
     func renderCommands(
-        fontAtlas: borrowing FontAtlas?
+        fontAtlas: borrowing FontAtlas?,
+        settings: SlayMacroExpansionSettings
     ) -> [(RenderCommand, ViewNode)] {
         var renderCommands = [(RenderCommand, ViewNode)]()
-        let cmd = renderCommandFor(node: root, fontAtlas: fontAtlas)
+        let cmd = renderCommandFor(node: root, fontAtlas: fontAtlas, settings: settings)
         renderCommands.append((cmd, root))
         appendRenderCommands(
             for: root.children,
             fontAtlas: fontAtlas,
+            settings: settings,
             renderCommands: &renderCommands
         )
         return renderCommands
@@ -39,30 +41,30 @@ extension LayoutEngine {
     private func appendRenderCommands(
         for children: [ViewNode],
         fontAtlas: borrowing FontAtlas?,
+        settings: SlayMacroExpansionSettings,
         renderCommands: inout [(RenderCommand, ViewNode)]
     ) {
         for child in children {
             let cmd = renderCommandFor(
                 node: child,
-                fontAtlas: fontAtlas
+                fontAtlas: fontAtlas,
+                settings: settings
             )
             renderCommands.append((cmd, child))
             appendRenderCommands(
                 for: child.children,
                 fontAtlas: fontAtlas,
+                settings: settings,
                 renderCommands: &renderCommands
             )
         }
     }
     private func renderCommandFor(
         node: ViewNode,
-        fontAtlas: borrowing FontAtlas?
+        fontAtlas: borrowing FontAtlas?,
+        settings: SlayMacroExpansionSettings
     ) -> RenderCommand {
         let frame = node.frame
-        /*guard let nodeBG = nodeBGs[nodeId.raw] else {
-            // no color, no render
-            return nil
-        }*/
         let nodeBG = node.type.backgroundColor ?? Color.rgba(0, 0, 0, 0)
         let color = (
             Float(nodeBG.red) / 255,
@@ -70,13 +72,13 @@ extension LayoutEngine {
             Float(nodeBG.blue) / 255,
             Float(nodeBG.alpha) / 255
         )
-        /*switch node.type {
+        switch node.type {
         case .staticText(let staticText):
-            let vertices = fontAtlas.vertices(for: staticText.text, x: frame.x, y: frame.y)
+            guard !settings.renderTextAsRectangles, let vertices = fontAtlas?.vertices(for: staticText.text, x: frame.x, y: frame.y) else { break }
             return .textVertices(vertices: vertices, color: color)
         default:
             break
-        }*/
+        }
         return .rect(
             frame: frame,
             radius: 0,
