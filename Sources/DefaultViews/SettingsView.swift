@@ -7,8 +7,8 @@ import SlayUI
     renderInvisibleItems: true,
     renderTextAsRectangles: true
 )
-struct SettingsView: View {
-    var body: some View {
+package struct SettingsView: View {
+    package var body: some View {
         List {
             List {
                 Text("Airplane Mode")

@@ -1,4 +1,5 @@
 
+@testable import DefaultViews
 import Slay
 import SlayKit
 import SlayUI

@@ -7,8 +7,8 @@ import SlayUI
     renderInvisibleItems: true,
     renderTextAsRectangles: true
 )
-struct YouTubeSubscriptionsView: View {
-    var body: some View {
+package struct YouTubeSubscriptionsView: View {
+    package var body: some View {
         VStack {
             HStack { // subscribed channels
                 Rectangle(width: 50, height: 50, backgroundColor: .rgba(255, 255, 255, 255))
