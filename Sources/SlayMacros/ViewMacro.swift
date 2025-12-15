@@ -169,7 +169,29 @@ struct ViewMacro: MemberMacro {
         case .text(let text, _, _, let color):
             return ".text(text: \"\"\"\n\(text)\n\"\"\", x: \(x), y: \(y), color: \(color))"
         case .textVertices(let vertices, let color):
-            return ".textVertices(vertices: [], color: \(color))" // TODO: fix
+            var newVertices = ""
+            newVertices.reserveCapacity(vertices.count * 18) // X.X, Y.Y, 0.0, 0.0
+            var i:UInt8 = 0
+            loop: for vert in vertices {
+                newVertices.append(", ")
+                switch i {
+                case 0: // x
+                    newVertices.append(vert == 0 ? "offsetX" : "\(vert) + offsetX")
+                case 1: // y
+                    newVertices.append(vert == 0 ? "offsetY" : "\(vert) + offsetY")
+                case 2:
+                    newVertices.append("\(vert)")
+                case 3:
+                    newVertices.append("\(vert)")
+                    i = 0
+                    continue loop
+                default:
+                    break
+                }
+                i += 1
+            }
+            newVertices.removeFirst(2)
+            return ".textVertices(vertices: [\(newVertices)], color: \(color))"
         }
     }
     private static func offset(frame: Rect, x: String, y: String) -> String {

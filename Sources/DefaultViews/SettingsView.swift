@@ -5,7 +5,7 @@ import SlayUI
 
 @View(
     renderInvisibleItems: true,
-    renderTextAsRectangles: true
+    renderTextAsRectangles: false
 )
 package struct SettingsView: View {
     package var body: some View {

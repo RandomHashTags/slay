@@ -24,7 +24,7 @@ func load() {
         fatalError("failed to load font")
     }
 
-    let cmds = SettingsView.Static_1280x720.renderCommands
+    let cmds = SettingsView.Static_1280x720.renderCommandsWithOffset(offsetX: 0, offsetY: 100)
     var renderer = GLFWRenderer()
     for i in cmds.indices {
         renderer.push(cmds[i])
