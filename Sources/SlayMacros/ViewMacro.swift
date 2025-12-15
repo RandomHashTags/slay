@@ -121,17 +121,41 @@ struct ViewMacro: MemberMacro {
                 initializer: .init(value: ExprSyntax(stringLiteral: "[\(renderCommandReferences.joined(separator: ", "))]"))
             )))
 
-            var renderCommandOffsetItems = CodeBlockItemListSyntax()
-            renderCommandOffsetItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: renderCommands.enumerated().map({
-                let elementOffset = $0.element.offset
+            var renderCommandExprs = [ExprSyntax]()
+            var offsetCache = OffsetCache()
+
+            for cmd in renderCommands {
+                let elementOffset = cmd.offset
                 var expr = ExprSyntax(stringLiteral: offset(
-                    command: $0.element,
+                    command: cmd,
                     x: elementOffset.x == 0 ? "offsetX" : "\(elementOffset.x) + offsetX",
-                    y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY"
+                    y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY",
+                    cache: &offsetCache
                 ))
                 expr.leadingTrivia = .newline
-                return expr
-            }))))))))
+                renderCommandExprs.append(expr)
+            }
+
+            var functionItems = CodeBlockItemListSyntax()
+            for (xValue, xKey) in offsetCache.sharedX {
+                var variable = VariableDeclSyntax(
+                    .let,
+                    name: .init(stringLiteral: xKey),
+                    initializer: .init(value: ExprSyntax(stringLiteral: xValue))
+                )
+                variable.leadingTrivia = .newline
+                functionItems.append(.init(item: .decl(DeclSyntax(variable))))
+            }
+            for (yValue, yKey) in offsetCache.sharedY {
+                var variable = VariableDeclSyntax(
+                    .let,
+                    name: .init(stringLiteral: yKey),
+                    initializer: .init(value: ExprSyntax(stringLiteral: yValue))
+                )
+                variable.leadingTrivia = .newline
+                functionItems.append(.init(item: .decl(DeclSyntax(variable))))
+            }
+            functionItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: renderCommandExprs)))))))
 
             members.append(.init(decl: FunctionDeclSyntax.init(
                 modifiers: [
@@ -146,7 +170,7 @@ struct ViewMacro: MemberMacro {
                     ]),
                     returnClause: .init(type: cmdsTypeSyntax)
                 ),
-                body: .init(statements: renderCommandOffsetItems)
+                body: .init(statements: functionItems)
             )))
 
             let staticStruct = StructDeclSyntax(
@@ -162,11 +186,18 @@ struct ViewMacro: MemberMacro {
         return decls
     }
 
-    private static func offset(command: RenderCommand, x: String, y: String) -> String {
+    private static func offset(
+        command: RenderCommand,
+        x: String,
+        y: String,
+        cache: inout OffsetCache
+    ) -> String {
         switch command {
         case .rect(let frame, let radius, let color):
+            let (x, y) = cache.append(offsetX: x, offsetY: y)
             return ".rect(frame: \(offset(frame: frame, x: x, y: y)), radius: \(radius), color: \(color))"
         case .text(let text, _, _, let color):
+            let (x, y) = cache.append(offsetX: x, offsetY: y)
             return ".text(text: \"\"\"\n\(text)\n\"\"\", x: \(x), y: \(y), color: \(color))"
         case .textVertices(let vertices, let color):
             var newVertices = ""
@@ -176,9 +207,11 @@ struct ViewMacro: MemberMacro {
                 newVertices.append(", ")
                 switch i {
                 case 0: // x
-                    newVertices.append(vert == 0 ? "offsetX" : "\(vert) + offsetX")
+                    let offsetX = cache.append(offsetX: vert == 0 ? "offsetX" : "\(vert) + offsetX")
+                    newVertices.append(offsetX)
                 case 1: // y
-                    newVertices.append(vert == 0 ? "offsetY" : "\(vert) + offsetY")
+                    let offsetY = cache.append(offsetY: vert == 0 ? "offsetY" : "\(vert) + offsetY")
+                    newVertices.append(offsetY)
                 case 2:
                     newVertices.append("\(vert)")
                 case 3:
@@ -194,7 +227,55 @@ struct ViewMacro: MemberMacro {
             return ".textVertices(vertices: [\(newVertices)], color: \(color))"
         }
     }
-    private static func offset(frame: Rect, x: String, y: String) -> String {
+    private static func offset(
+        frame: Rect,
+        x: String,
+        y: String
+    ) -> String {
         return "Rect(x: \(x), y: \(y), w: \(frame.w), h: \(frame.h))"
+    }
+}
+
+// MARK: Offset cache
+extension ViewMacro {
+    struct OffsetCache: Sendable {
+        var offsetX = [String]()
+        var sharedX = [String:String]()
+
+        var offsetY = [String]()
+        var sharedY = [String:String]()
+
+        mutating func append(
+            offsetX: String,
+            offsetY: String
+        ) -> (String, String) {
+            return (
+                self.append(offsetX: offsetX),
+                self.append(offsetY: offsetY)
+            )
+        }
+
+        mutating func append(offsetX: String) -> String {
+            if let existing = sharedX[offsetX] {
+                self.offsetX.append(existing)
+                return existing
+            } else {
+                let value = "_x\(sharedX.count)"
+                sharedX[offsetX] = value
+                self.offsetX.append(value)
+                return value
+            }
+        }
+        mutating func append(offsetY: String) -> String {
+            if let existing = sharedY[offsetY] {
+                self.offsetY.append(existing)
+                return existing
+            } else {
+                let value = "_y\(sharedY.count)"
+                sharedY[offsetY] = value
+                self.offsetY.append(value)
+                return value
+            }
+        }
     }
 }

@@ -26,14 +26,15 @@ public enum RenderCommand: Sendable {
         }
     }
 
+    /// - Warning: `textVertices` always returns `(-1, -1)` because it contains multiple offsets in its `vertices` parameter.
     public var offset: (x: Float, y: Float) {
         switch self {
         case .rect(let frame, _, _):
             return (frame.x, frame.y)
         case .text(_, let x, let y, _):
             return (x, y)
-        case .textVertices(_, _):
-            return (0, 0) // TODO: fix
+        case .textVertices:
+            return (-1, -1)
         }
     }
 }
