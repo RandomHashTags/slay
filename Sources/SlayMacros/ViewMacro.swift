@@ -122,98 +122,12 @@ struct ViewMacro: MemberMacro {
             )))
 
             var renderCommandOffsetItems = CodeBlockItemListSyntax()
-            /*renderCommandOffsetItems.append(.init(item: .decl(DeclSyntax("\nlet xOffset = SIMD64<Float>(repeating: offsetX)"))))
-            renderCommandOffsetItems.append(.init(item: .decl(DeclSyntax("\nlet yOffset = SIMD64<Float>(repeating: offsetY)"))))
-            var renderCommandSIMDXReferences = [String]()
-            var renderCommandSIMDYReferences = [String]()
-
-            var remainingRenderCommands = renderCommands.count
-            if remainingRenderCommands >= 64 {
-                let (amount, items) = try test(
-                    offset: 0,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD64<Float>()
-                )
-                let remove = amount * 64
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands >= 32 {
-                let (amount, items) = try test(
-                    offset: renderCommands.count - remainingRenderCommands,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD32<Float>()
-                )
-                let remove = amount * 32
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands >= 16 {
-                let (amount, items) = try test(
-                    offset: renderCommands.count - remainingRenderCommands,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD16<Float>()
-                )
-                let remove = amount * 16
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands >= 8 {
-                let (amount, items) = try test(
-                    offset: renderCommands.count - remainingRenderCommands,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD8<Float>()
-                )
-                let remove = amount * 8
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands >= 4 {
-                let (amount, items) = try test(
-                    offset: renderCommands.count - remainingRenderCommands,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD4<Float>()
-                )
-                let remove = amount * 4
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands >= 2 {
-                let (amount, items) = try test(
-                    offset: renderCommands.count - remainingRenderCommands,
-                    renderCommands: renderCommands,
-                    renderCommandSIMDXReferences: &renderCommandSIMDXReferences,
-                    renderCommandSIMDYReferences: &renderCommandSIMDYReferences,
-                    SIMD2<Float>()
-                )
-                let remove = amount * 2
-                remainingRenderCommands -= remove
-                renderCommandOffsetItems.append(contentsOf: items)
-            }
-            if remainingRenderCommands > 0 {
-                // TODO: fix
-                renderCommandSIMDXReferences.append("0")
-                renderCommandSIMDYReferences.append("0")
-            }*/
-
             renderCommandOffsetItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: renderCommands.enumerated().map({
                 let elementOffset = $0.element.offset
                 var expr = ExprSyntax(stringLiteral: offset(
                     command: $0.element,
                     x: elementOffset.x == 0 ? "offsetX" : "\(elementOffset.x) + offsetX",
                     y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY"
-                    /*x: renderCommandSIMDXReferences[$0.offset],
-                    y: renderCommandSIMDYReferences[$0.offset]*/
                 ))
                 expr.leadingTrivia = .newline
                 return expr
@@ -246,87 +160,6 @@ struct ViewMacro: MemberMacro {
             decls.append(.init(staticStruct))
         }
         return decls
-    }
-
-    private static func test<T: SIMD<Float>>(
-        offset: Int,
-        renderCommands: [RenderCommand],
-        renderCommandSIMDXReferences: inout [String],
-        renderCommandSIMDYReferences: inout [String],
-        _ test: T
-    ) throws -> (amount: Int, items: [CodeBlockItemSyntax]) {
-        let (xSIMDs, ySIMDs):([T], [T]) = simds(offset: offset, for: renderCommands)
-        var items = [CodeBlockItemSyntax]()
-
-        let xItems = try xSIMDs.enumerated().map({
-            let xSIMD = "xSIMD\(T.scalarCount)_\($0.offset)"
-            var e = try VariableDeclSyntax("var \(raw: xSIMD) = \(raw: $0.element)")
-            e.leadingTrivia = .newline
-            for i in 0..<T.scalarCount {
-                renderCommandSIMDXReferences.append("\(xSIMD)[\(i)]")
-            }
-            return CodeBlockItemSyntax(item: .decl(DeclSyntax(e)))
-        })
-        items.append(contentsOf: xItems)
-
-        let yItems = try ySIMDs.enumerated().map({
-            let ySIMD = "ySIMD\(T.scalarCount)_\($0.offset)"
-            var e = try VariableDeclSyntax("var \(raw: ySIMD) = \(raw: $0.element)")
-            e.leadingTrivia = .newline
-            for i in 0..<T.scalarCount {
-                renderCommandSIMDYReferences.append("\(ySIMD)[\(i)]")
-            }
-            return CodeBlockItemSyntax(item: .decl(DeclSyntax(e)))
-        })
-        items.append(contentsOf: yItems)
-
-        let simdSuffix:String
-        switch T.scalarCount {
-        case 64: simdSuffix = ""
-        case 32: simdSuffix = ".lowHalf"
-        case 16: simdSuffix = ".lowHalf.lowHalf"
-        case 8: simdSuffix = ".lowHalf.lowHalf.lowHalf"
-        case 4: simdSuffix = ".lowHalf.lowHalf.lowHalf.lowHalf"
-        case 2: simdSuffix = ".lowHalf.lowHalf.lowHalf.lowHalf.lowHalf"
-        default: simdSuffix = ""
-        }
-
-        for i in 0..<xSIMDs.count {
-            var xExpr = ExprSyntax("xSIMD\(raw: T.scalarCount)_\(raw: i) += xOffset\(raw: simdSuffix)")
-            xExpr.leadingTrivia = .newline
-
-            var yExpr = ExprSyntax("ySIMD\(raw: T.scalarCount)_\(raw: i) += yOffset\(raw: simdSuffix)")
-            yExpr.leadingTrivia = .newline
-
-            items.append(.init(item: .expr(xExpr)))
-            items.append(.init(item: .expr(yExpr)))
-        }
-        return (xSIMDs.count, items)
-    }
-
-    private static func simds<T: SIMD<Float>>(
-        offset: Int,
-        for commands: [RenderCommand]
-    ) -> (x: [T], y: [T]) {
-        let numberOfSIMDs = (commands.count - offset) / T.scalarCount
-        var xSIMDs = [T]()
-        var ySIMDs = [T]()
-        var commandIndex = offset
-        var simdX = T()
-        var simdY = T()
-        for _ in 0..<numberOfSIMDs {
-            for simdIndex in 0..<T.scalarCount {
-                let offset = commands[commandIndex].offset
-                simdX[simdIndex] = offset.x
-                simdY[simdIndex] = offset.y
-                commandIndex += 1
-            }
-            xSIMDs.append(simdX)
-            ySIMDs.append(simdY)
-            simdX = .zero
-            simdY = .zero
-        }
-        return (xSIMDs, ySIMDs)
     }
 
     private static func offset(command: RenderCommand, x: String, y: String) -> String {
