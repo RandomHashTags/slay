@@ -207,10 +207,11 @@ struct ViewMacro: MemberMacro {
             }*/
 
             renderCommandOffsetItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: renderCommands.enumerated().map({
+                let elementOffset = $0.element.offset
                 var expr = ExprSyntax(stringLiteral: offset(
                     command: $0.element,
-                    x: "\($0.element.offset.x) + offsetX",
-                    y: "\($0.element.offset.y) + offsetY"
+                    x: elementOffset.x == 0 ? "offsetX" : "\(elementOffset.x) + offsetX",
+                    y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY"
                     /*x: renderCommandSIMDXReferences[$0.offset],
                     y: renderCommandSIMDYReferences[$0.offset]*/
                 ))
