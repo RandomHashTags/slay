@@ -1,0 +1,1 @@
+swiftly run swift test -Xswiftc -DUNIT_TESTING

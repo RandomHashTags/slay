@@ -3,10 +3,14 @@ import Slay
 import SlayKit
 import SlayUI
 
+#if UNIT_TESTING
 @View(
     renderInvisibleItems: true,
-    renderTextAsRectangles: false
+    renderTextAsRectangles: true
 )
+#else
+@View
+#endif
 package struct SettingsView: View {
     package var body: some View {
         List {
