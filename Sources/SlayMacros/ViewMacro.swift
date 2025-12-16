@@ -57,7 +57,23 @@ struct ViewMacro: MemberMacro {
                 }
             }
         }
+        return layoutDecls(
+            supportedStaticDimensions: supportedStaticDimensions,
+            settings: settings,
+            fontAtlas: fontAtlas,
+            body: body
+        )
+    }
+}
 
+// MARK: Layout decls
+extension ViewMacro {
+    private static func layoutDecls(
+        supportedStaticDimensions: [(Int32, Int32)],
+        settings: SlayMacroExpansionSettings,
+        fontAtlas: consuming FontAtlas?,
+        body: ViewType?
+    ) -> [DeclSyntax] {
         let engine = LayoutEngine()
         if let body {
             engine.setBody(body)
@@ -120,59 +136,8 @@ struct ViewMacro: MemberMacro {
                 type: .init(type: cmdsTypeSyntax),
                 initializer: .init(value: ExprSyntax(stringLiteral: "[\(renderCommandReferences.joined(separator: ", "))]"))
             )))
-
-            var renderCommandExprs = [ExprSyntax]()
-            var offsetCache = OffsetCache()
-
-            for cmd in renderCommands {
-                let elementOffset = cmd.offset
-                var expr = ExprSyntax(stringLiteral: offset(
-                    command: cmd,
-                    x: elementOffset.x == 0 ? "offsetX" : "\(elementOffset.x) + offsetX",
-                    y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY",
-                    cache: &offsetCache
-                ))
-                expr.leadingTrivia = .newline
-                renderCommandExprs.append(expr)
-            }
-
-            var functionItems = CodeBlockItemListSyntax()
-            for (xValue, xKey) in offsetCache.sharedX {
-                var variable = VariableDeclSyntax(
-                    .let,
-                    name: .init(stringLiteral: xKey),
-                    initializer: .init(value: ExprSyntax(stringLiteral: xValue))
-                )
-                variable.leadingTrivia = .newline
-                functionItems.append(.init(item: .decl(DeclSyntax(variable))))
-            }
-            for (yValue, yKey) in offsetCache.sharedY {
-                var variable = VariableDeclSyntax(
-                    .let,
-                    name: .init(stringLiteral: yKey),
-                    initializer: .init(value: ExprSyntax(stringLiteral: yValue))
-                )
-                variable.leadingTrivia = .newline
-                functionItems.append(.init(item: .decl(DeclSyntax(variable))))
-            }
-            functionItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: renderCommandExprs)))))))
-
-            members.append(.init(decl: FunctionDeclSyntax.init(
-                modifiers: [
-                    .init(name: .keyword(.public)),
-                    .init(name: .keyword(.static))
-                ],
-                name: "renderCommandsWithOffset",
-                signature: .init(
-                    parameterClause: .init(parameters: [
-                        .init(firstName: "offsetX", type: TypeSyntax("Float"), trailingComma: .commaToken()),
-                        .init(firstName: "offsetY", type: TypeSyntax("Float"))
-                    ]),
-                    returnClause: .init(type: cmdsTypeSyntax)
-                ),
-                body: .init(statements: functionItems)
-            )))
-
+            
+            members.append(.init(decl: offsetFuncDecl(renderCommands: renderCommands, cmdsTypeSyntax: cmdsTypeSyntax)))
             let staticStruct = StructDeclSyntax(
                 leadingTrivia: "// MARK: \(width)x\(height)\n",
                 modifiers: [
@@ -185,7 +150,68 @@ struct ViewMacro: MemberMacro {
         }
         return decls
     }
+}
 
+// MARK: Offset func decl
+extension ViewMacro {
+    private static func offsetFuncDecl(
+        renderCommands: [RenderCommand],
+        cmdsTypeSyntax: TypeSyntax
+    ) -> FunctionDeclSyntax {
+        var cache = OffsetCache()
+        var expressions = [ExprSyntax]()
+        for cmd in renderCommands {
+            let elementOffset = cmd.offset
+            var expr = ExprSyntax(stringLiteral: offset(
+                command: cmd,
+                x: elementOffset.x == 0 ? "offsetX" : "\(elementOffset.x) + offsetX",
+                y: elementOffset.y == 0 ? "offsetY" : "\(elementOffset.y) + offsetY",
+                cache: &cache
+            ))
+            expr.leadingTrivia = .newline
+            expressions.append(expr)
+        }
+
+        var functionItems = CodeBlockItemListSyntax()
+        for (xValue, xKey) in cache.sharedX {
+            var variable = VariableDeclSyntax(
+                .let,
+                name: .init(stringLiteral: xKey),
+                initializer: .init(value: ExprSyntax(stringLiteral: xValue))
+            )
+            variable.leadingTrivia = .newline
+            functionItems.append(.init(item: .decl(DeclSyntax(variable))))
+        }
+        for (yValue, yKey) in cache.sharedY {
+            var variable = VariableDeclSyntax(
+                .let,
+                name: .init(stringLiteral: yKey),
+                initializer: .init(value: ExprSyntax(stringLiteral: yValue))
+            )
+            variable.leadingTrivia = .newline
+            functionItems.append(.init(item: .decl(DeclSyntax(variable))))
+        }
+        functionItems.append(.init(item: .stmt(.init(ReturnStmtSyntax(expression: ArrayExprSyntax(elements: .init(expressions: expressions)))))))
+        return FunctionDeclSyntax.init(
+            modifiers: [
+                .init(name: .keyword(.public)),
+                .init(name: .keyword(.static))
+            ],
+            name: "renderCommandsWithOffset",
+            signature: .init(
+                parameterClause: .init(parameters: [
+                    .init(firstName: "offsetX", type: TypeSyntax("Float"), trailingComma: .commaToken()),
+                    .init(firstName: "offsetY", type: TypeSyntax("Float"))
+                ]),
+                returnClause: .init(type: cmdsTypeSyntax)
+            ),
+            body: .init(statements: functionItems)
+        )
+    }
+}
+
+// MARK: Render cmd offsets
+extension ViewMacro {
     private static func offset(
         command: RenderCommand,
         x: String,
