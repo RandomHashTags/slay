@@ -3,12 +3,16 @@ import Slay
 import SlayKit
 import SlayUI
 
+#if UNIT_TESTING
 @View(
     renderInvisibleItems: true,
     renderTextAsRectangles: true
 )
-struct YouTubeSubscriptionsView: View {
-    var body: some View {
+#else
+@View
+#endif
+package struct YouTubeSubscriptionsView: View {
+    package var body: some View {
         VStack {
             HStack { // subscribed channels
                 Rectangle(width: 50, height: 50, backgroundColor: .rgba(255, 255, 255, 255))

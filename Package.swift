@@ -46,6 +46,17 @@ var targets:[Target] = [
         ]
     ),
 
+    // MARK: DefaultViews
+    .target(
+        name: "DefaultViews",
+        dependencies: [
+            "SlayKit",
+            "SlayMacros",
+            "SlayUI",
+            "Slay",
+        ]
+    ),
+
     // MARK: SlayKit
     .target(
         name: "SlayKit",
@@ -86,6 +97,7 @@ var targets:[Target] = [
     .executableTarget(
         name: "Run",
         dependencies: [
+            "DefaultViews",
             "Slay",
             "SlayKit",
             "SlayUI",
@@ -98,7 +110,10 @@ var targets:[Target] = [
     // MARK: SlayTests
     .testTarget(
         name: "SlayTests",
-        dependencies: ["Slay"]
+        dependencies: [
+            "DefaultViews",
+            "Slay"
+        ]
     )
 ]
 for target in targets {

@@ -3,12 +3,16 @@ import Slay
 import SlayKit
 import SlayUI
 
+#if UNIT_TESTING
 @View(
     renderInvisibleItems: true,
     renderTextAsRectangles: true
 )
-struct SettingsView: View {
-    var body: some View {
+#else
+@View
+#endif
+package struct SettingsView: View {
+    package var body: some View {
         List {
             List {
                 Text("Airplane Mode")
