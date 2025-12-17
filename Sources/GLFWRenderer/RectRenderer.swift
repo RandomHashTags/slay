@@ -63,15 +63,80 @@ extension RectRenderer {
         glUniform4fv(locColor, 1, &col)
 
         // create vertex data (two triangles)
-        let x0 = rect.x
-        let y0 = rect.y
-        let x1 = rect.x + rect.w
-        let y1 = rect.y + rect.h
-        let verts = [
-            x0, y1,  x1, y1,  x1, y0,
-            x1, y0,  x0, y0,  x0, y1
-        ]
-        verts.withUnsafeBytes { buf in
+        let verts = rect.vertices
+        let span = verts.span
+        span.withUnsafeBytes { buf in
+            glBindVertexArray(vao)
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * GLsizei(MemoryLayout<Float>.size), nil)
+            glEnableVertexAttribArray(0)
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+        }
+    }
+}
+
+extension RectRenderer {
+    public func draw(
+        _ rect: RenderRectangle
+    ) {
+        glUseProgram(program)
+        let locScreen = glGetUniformLocation(program, "uScreen")
+        var screen = [screenW, screenH]
+        glUniform2fv(locScreen, 1, &screen)
+        let locColor = glGetUniformLocation(program, "uColor")
+        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
+        glUniform4fv(locColor, 1, &col)
+
+        // create vertex data (two triangles)
+        let verts = rect.frame.vertices
+        let span = verts.span
+        span.withUnsafeBytes { buf in
+            glBindVertexArray(vao)
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * GLsizei(MemoryLayout<Float>.size), nil)
+            glEnableVertexAttribArray(0)
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+        }
+    }
+}
+
+extension RectRenderer {
+    public func draw(
+        _ rect: RenderVertices
+    ) {
+        glUseProgram(program)
+        let locScreen = glGetUniformLocation(program, "uScreen")
+        var screen = [screenW, screenH]
+        glUniform2fv(locScreen, 1, &screen)
+        let locColor = glGetUniformLocation(program, "uColor")
+        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
+        glUniform4fv(locColor, 1, &col)
+        rect.vertices.withUnsafeBytes { buf in
+            glBindVertexArray(vao)
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * GLsizei(MemoryLayout<Float>.size), nil)
+            glEnableVertexAttribArray(0)
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+        }
+    }
+}
+
+extension RectRenderer {
+    public func draw<let count: Int>(
+        _ rect: RenderInlineVertices<count>
+    ) {
+        glUseProgram(program)
+        let locScreen = glGetUniformLocation(program, "uScreen")
+        var screen = [screenW, screenH]
+        glUniform2fv(locScreen, 1, &screen)
+        let locColor = glGetUniformLocation(program, "uColor")
+        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
+        glUniform4fv(locColor, 1, &col)
+        let span = rect.vertices.span
+        span.withUnsafeBytes { buf in
             glBindVertexArray(vao)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)

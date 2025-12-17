@@ -16,4 +16,15 @@ public struct Rect: Sendable {
         self.w = w
         self.h = h
     }
+
+    public var vertices: [12 of Float] {
+        let x0 = x
+        let y0 = y
+        let x1 = x + w
+        let y1 = y + h
+        return [
+            x0, y1,  x1, y1,  x1, y0,
+            x1, y0,  x0, y0,  x0, y1
+        ]
+    }
 }
