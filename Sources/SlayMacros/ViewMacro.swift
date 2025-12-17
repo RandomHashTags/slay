@@ -57,7 +57,7 @@ struct ViewMacro: MemberMacro {
                 }
             }
         }
-        return layoutDecls(
+        return try layoutDecls(
             supportedStaticDimensions: supportedStaticDimensions,
             settings: settings,
             fontAtlas: fontAtlas,
@@ -73,7 +73,7 @@ extension ViewMacro {
         settings: SlayMacroExpansionSettings,
         fontAtlas: consuming FontAtlas?,
         body: ViewType?
-    ) -> [DeclSyntax] {
+    ) throws -> [DeclSyntax] {
         let engine = LayoutEngine()
         if let body {
             engine.setBody(body)
@@ -87,6 +87,13 @@ extension ViewMacro {
             var visibleItemIndexes = Set<Int>()
             visibleItemIndexes.reserveCapacity(allRenderCommands.count)
             var members = MemberBlockItemListSyntax()
+            members.append(.init(decl: DeclSyntax(InitializerDeclSyntax(
+                modifiers: [
+                    .init(name: .keyword(.public))
+                ],
+                signature: .init(parameterClause: .init(parameters: [])),
+                body: .init(statements: [])
+            ))))
             for (index, (cmd, node)) in allRenderCommands.enumerated() {
                 var leadingTrivia:Trivia
                 if node.customName != nil {
@@ -125,6 +132,8 @@ extension ViewMacro {
                     return $0.element.0
                 })
             }
+            try appendNewRenderCommands(cmds: allRenderCommands.map({ $0.0 }), &members)
+
             let cmdsTypeSyntax = TypeSyntax(stringLiteral: "[\(renderCommandReferences.count) of RenderCommand]")
             members.append(.init(decl: VariableDeclSyntax.init(
                 modifiers: [
@@ -144,11 +153,47 @@ extension ViewMacro {
                     .init(name: .keyword(.public))
                 ],
                 name: "Static_\(raw: width)x\(raw: height)",
+                inheritanceClause: .init(inheritedTypes: [.init(type: TypeSyntax("Sendable"))]),
                 memberBlock: .init(members: members)
             )
             decls.append(.init(staticStruct))
         }
         return decls
+    }
+}
+
+// MARK: New render cmds
+extension ViewMacro {
+    private static func appendNewRenderCommands(
+        cmds: [RenderCommand],
+        _ members: inout MemberBlockItemListSyntax
+    ) throws {
+        var renderFuncDecl = FunctionDeclSyntax(
+            modifiers: [
+                .init(name: .keyword(.public))
+            ],
+            name: "render",
+            signature: .init(parameterClause: .init(parameters: [
+                .init(firstName: "renderer", type: TypeSyntax("borrowing some RendererProtocol & ~Copyable"))
+            ])),
+            body: .init(statements: [])
+        )
+        for (i, cmd) in cmds.enumerated() {
+            let variableName = "_new\(i)"
+            switch cmd {
+            case .rect(let frame, let radius, let color):
+                // TODO: handle radius
+                let vertices = frame.vertices
+                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = RenderInlineVertices(vertices: \(raw: vertices.indices.map({ vertices[$0] })), color: \(raw: color))"))))
+            case .text(let text, let x, let y, let color):
+                let new = RenderText(text: text, x: x, y: y, color: color)
+                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = \(raw: new)"))))
+            case .textVertices(let vertices, let color):
+                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = RenderInlineVertices(vertices: \(raw: vertices), color: \(raw: color))"))))
+            }
+            renderFuncDecl.body!.statements.append(.init(item: .expr(ExprSyntax("renderer.render(\(raw: "Self." + variableName))"))))
+        }
+        members.append(.init(decl: DeclSyntax(renderFuncDecl)))
     }
 }
 

@@ -18,13 +18,11 @@ public struct Rect: Sendable {
     }
 
     public var vertices: [12 of Float] {
-        let x0 = x
-        let y0 = y
         let x1 = x + w
         let y1 = y + h
         return [
-            x0, y1,  x1, y1,  x1, y0,
-            x1, y0,  x0, y0,  x0, y1
+            x, y1,  x1, y1,  x1, y,
+            x1, y,  x, y,  x, y1
         ]
     }
 }

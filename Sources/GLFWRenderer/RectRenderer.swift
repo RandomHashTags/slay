@@ -59,13 +59,10 @@ extension RectRenderer {
         var screen = [screenW, screenH]
         glUniform2fv(locScreen, 1, &screen)
         let locColor = glGetUniformLocation(program, "uColor")
-        var col = [color.0, color.1, color.2, color.3]
-        glUniform4fv(locColor, 1, &col)
-
-        // create vertex data (two triangles)
-        let verts = rect.vertices
-        let span = verts.span
-        span.withUnsafeBytes { buf in
+        withUnsafePointer(to: color) {
+            glUniform4fv(locColor, 1, UnsafePointer<Float>(OpaquePointer($0)))
+        }
+        rect.vertices.span.withUnsafeBytes { buf in
             glBindVertexArray(vao)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)
@@ -85,13 +82,10 @@ extension RectRenderer {
         var screen = [screenW, screenH]
         glUniform2fv(locScreen, 1, &screen)
         let locColor = glGetUniformLocation(program, "uColor")
-        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
-        glUniform4fv(locColor, 1, &col)
-
-        // create vertex data (two triangles)
-        let verts = rect.frame.vertices
-        let span = verts.span
-        span.withUnsafeBytes { buf in
+        withUnsafePointer(to: rect.color) {
+            glUniform4fv(locColor, 1, UnsafePointer<Float>(OpaquePointer($0)))
+        }
+        rect.frame.vertices.span.withUnsafeBytes { buf in
             glBindVertexArray(vao)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)
@@ -111,8 +105,9 @@ extension RectRenderer {
         var screen = [screenW, screenH]
         glUniform2fv(locScreen, 1, &screen)
         let locColor = glGetUniformLocation(program, "uColor")
-        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
-        glUniform4fv(locColor, 1, &col)
+        withUnsafePointer(to: rect.color) {
+            glUniform4fv(locColor, 1, UnsafePointer<Float>(OpaquePointer($0)))
+        }
         rect.vertices.withUnsafeBytes { buf in
             glBindVertexArray(vao)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
@@ -133,10 +128,10 @@ extension RectRenderer {
         var screen = [screenW, screenH]
         glUniform2fv(locScreen, 1, &screen)
         let locColor = glGetUniformLocation(program, "uColor")
-        var col = [rect.color.0, rect.color.1, rect.color.2, rect.color.3]
-        glUniform4fv(locColor, 1, &col)
-        let span = rect.vertices.span
-        span.withUnsafeBytes { buf in
+        withUnsafePointer(to: rect.color) {
+            glUniform4fv(locColor, 1, UnsafePointer<Float>(OpaquePointer($0)))
+        }
+        rect.vertices.span.withUnsafeBytes { buf in
             glBindVertexArray(vao)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, buf.count, buf.baseAddress, GL_DYNAMIC_DRAW)

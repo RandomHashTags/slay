@@ -9,6 +9,8 @@ public struct GLFWRenderer: ~Copyable, RendererProtocol, @unchecked Sendable {
     private var rectRenderer:RectRenderer! = nil
     private var textRenderer:TextRenderer? = nil
 
+    private var window:OpaquePointer! = nil
+
     public init() {
         check(glfwInit() == GLFW_TRUE)
 
@@ -21,13 +23,15 @@ public struct GLFWRenderer: ~Copyable, RendererProtocol, @unchecked Sendable {
     }
 }
 
-// MARK: Render
+// MARK: Load
 extension GLFWRenderer {
-    public mutating func render(
+    public mutating func load(
         fontAtlas: consuming FontAtlas,
-        windowSettings: borrowing WindowSettings
+        windowSettings: borrowing WindowSettings,
     ) {
-        let window = glfwCreateWindow(windowSettings.width, windowSettings.height, windowSettings.title, nil, nil)
+        //glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE)
+        //glfwSwapInterval(0)
+        window = glfwCreateWindow(windowSettings.width, windowSettings.height, windowSettings.title, nil, nil)
         if window == nil {
             fatalError("Failed to create GLFW window")
         }
@@ -44,11 +48,20 @@ extension GLFWRenderer {
             screenH: Float(windowSettings.height)
         )
 
+        let width = windowSettings.width
+        let height = windowSettings.height
+        CGLFW.glViewport(0, 0, width, height)
+        CGLFW.glClearColor(0.12, 0.12, 0.12, 1.0)
+        CGLFW.glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
+        glfwSwapBuffers(window)
+    }
+}
+
+// MARK: Render
+extension GLFWRenderer {
+    public func render() {
         // Main loop
         while glfwWindowShouldClose(window) == 0 {
-            let width = windowSettings.width
-            let height = windowSettings.height
-            CGLFW.glViewport(0, 0, width, height)
             CGLFW.glClearColor(0.12, 0.12, 0.12, 1.0)
             CGLFW.glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
 
@@ -68,6 +81,23 @@ extension GLFWRenderer {
         glfwDestroyWindow(window)
         glfwTerminate()
     }
+
+    public func newRender() {
+        /*var needsRedraw = true
+        glfwSetKeyCallback(window) { _, _, _, _, _ in
+            needsRedraw = true
+        }
+
+        glfwSetFramebufferSizeCallback(window) { _, _, _ in
+            needsRedraw = true
+        }
+        while glfwWindowShouldClose(window) == 0 {
+            glfwSwapBuffers(window)
+            glfwPollEvents()
+        }
+        glfwDestroyWindow(window)
+        glfwTerminate()*/
+    }
 }
 
 // MARK: Helpers
@@ -83,5 +113,14 @@ extension GLFWRenderer {
 extension GLFWRenderer {
     public mutating func push(_ cmd: RenderCommand) {
         queue.append(cmd)
+    }
+}
+
+// MARK: Extensions
+extension GLFWRenderer {
+    public func render<let count: Int>(
+        _ cmd: RenderInlineVertices<count>
+    ) {
+        rectRenderer.draw(cmd)
     }
 }
