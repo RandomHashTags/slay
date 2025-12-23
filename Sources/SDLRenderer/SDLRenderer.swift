@@ -7,17 +7,18 @@ public struct SDL2Renderer: RendererProtocol, @unchecked Sendable {
     private var commands:[RenderCommand] = []
     private var renderer:OpaquePointer? = nil
 
+    private var window:OpaquePointer! = nil
+    private var fpsDelayMS:UInt32 = 25
+
     public init() {
         SDL_Init(SDL_INIT_VIDEO)
     }
 
-    /// - Parameters:
-    ///   - fps: Target frames per second to render the window.
-    public mutating func render(
+    public mutating func load(
         fontAtlas: consuming FontAtlas,
-        windowSettings: borrowing WindowSettings
+        windowSettings: borrowing WindowSettings,
     ) {
-        let window = SDL_CreateWindow(
+        window = SDL_CreateWindow(
             windowSettings.title,
             Int32(SDL_WINDOWPOS_CENTERED_MASK),
             Int32(SDL_WINDOWPOS_CENTERED_MASK),
@@ -26,7 +27,12 @@ public struct SDL2Renderer: RendererProtocol, @unchecked Sendable {
             windowSettings.flagsSDL
         )
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED.rawValue | SDL_RENDERER_PRESENTVSYNC.rawValue)
+        fpsDelayMS = windowSettings.fpsDelayMS
+    }
 
+    /// - Parameters:
+    ///   - fps: Target frames per second to render the window.
+    public func render() {
         var running = true
         var event = SDL_Event()
         while running {
@@ -39,7 +45,7 @@ public struct SDL2Renderer: RendererProtocol, @unchecked Sendable {
             SDL_RenderClear(renderer)
             drawRects()
             SDL_RenderPresent(renderer)
-            SDL_Delay(windowSettings.fpsDelayMS)
+            SDL_Delay(fpsDelayMS)
         }
         SDL_DestroyRenderer(renderer)
         SDL_DestroyWindow(window)
@@ -67,6 +73,22 @@ extension SDL2Renderer {
             }
             i +=  1
         }
+    }
+}
+
+extension SDL2Renderer {
+    public func render(
+        _ cmd: RenderRectangle
+    ) {
+    }
+
+    public func render<let count: Int>(
+        _ cmd: RenderInlineVertices<count>
+    ) {
+    }
+    public func render(
+        _ cmd: RenderVertices
+    ) {
     }
 }
 

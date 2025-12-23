@@ -24,13 +24,21 @@ func load() {
         fatalError("failed to load font")
     }
 
-    let cmds = SettingsView.Static_1280x720.renderCommandsWithOffset(offsetX: 0, offsetY: 100)
     var renderer = GLFWRenderer()
-    for i in cmds.indices {
-        renderer.push(cmds[i])
-    }
-    renderer.render(
+    renderer.load(
         fontAtlas: fontAtlas,
         windowSettings: settings
     )
+    for i in SettingsView.Static_1280x720.renderCommands.indices {
+        renderer.push(SettingsView.Static_1280x720.renderCommands[i])
+    }
+    renderer.render()
+
+    /*let finalRenderer = renderer
+    Task.detached {
+        try await Task.sleep(for: .seconds(1))
+        SettingsView.Static_1280x720().render(renderer: finalRenderer)
+    }
+    finalRenderer.render()
+    */
 }

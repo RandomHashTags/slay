@@ -13,6 +13,9 @@ public struct TextRenderer: GLFWRendererProtocol, ~Copyable {
     public var screenW:Float
     public var screenH:Float
 
+    private var stride = GLsizei(MemoryLayout<Float>.size * 4)
+    private var uvOffset = UnsafeRawPointer(bitPattern: MemoryLayout<Float>.size * 2)
+
     public init(
         atlas: consuming FontAtlas,
         screenW: Float,
@@ -92,8 +95,9 @@ extension TextRenderer {
         var screen = [screenW, screenH]
         glUniform2fv(locScreen, 1, &screen)
         let locColor = glGetUniformLocation(program, "uColor")
-        var col = [color.0, color.1, color.2, color.3]
-        glUniform4fv(locColor, 1, &col)
+        withUnsafePointer(to: color) {
+            glUniform4fv(locColor, 1, UnsafePointer<Float>(OpaquePointer($0)))
+        }
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, texture)
         let uAtlasLoc = glGetUniformLocation(program, "uAtlas")
@@ -136,9 +140,8 @@ extension TextRenderer {
         verts.withUnsafeBytes { buf in
             glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(buf.count), buf.baseAddress, GL_DYNAMIC_DRAW)
         }
-        let stride = GLsizei(MemoryLayout<Float>.size * 4)
+        
         glVertexAttribPointer(0, 2, GL_FLOAT, false, stride, nil)
-        let uvOffset = UnsafeRawPointer(bitPattern: MemoryLayout<Float>.size * 2)
         glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, uvOffset)
         glEnableVertexAttribArray(0)
         glEnableVertexAttribArray(1)
