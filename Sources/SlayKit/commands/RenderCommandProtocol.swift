@@ -1,4 +1,4 @@
 
 public protocol RenderCommandProtocol: Sendable {
-    var color: (Float, Float, Float, Float) { get }
+    func render(renderer: borrowing some RendererProtocol & ~Copyable)
 }

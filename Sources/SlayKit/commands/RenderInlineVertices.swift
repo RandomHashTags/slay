@@ -10,4 +10,8 @@ public struct RenderInlineVertices<let count: Int>: RenderCommandProtocol {
         self.vertices = vertices
         self.color = color
     }
+
+    public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
+        renderer.render(self)
+    }
 }

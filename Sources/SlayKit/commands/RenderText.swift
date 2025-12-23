@@ -16,4 +16,8 @@ public struct RenderText: RenderCommandProtocol {
         self.y = y
         self.color = color
     }
+
+    public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
+        // TODO: fix
+    }
 }

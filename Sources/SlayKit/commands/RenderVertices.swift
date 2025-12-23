@@ -10,4 +10,8 @@ public struct RenderVertices: RenderCommandProtocol {
         self.vertices = vertices
         self.color = color
     }
+
+    public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
+        // TODO: fix
+    }
 }

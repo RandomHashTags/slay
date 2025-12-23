@@ -13,4 +13,8 @@ public struct RenderRectangle: RenderCommandProtocol {
         self.radius = radius
         self.color = color
     }
+
+    public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
+        // TODO: fix
+    }
 }

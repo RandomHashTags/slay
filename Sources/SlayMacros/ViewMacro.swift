@@ -132,7 +132,7 @@ extension ViewMacro {
                     return $0.element.0
                 })
             }
-            try appendNewRenderCommands(cmds: allRenderCommands.map({ $0.0 }), &members)
+            appendNewRenderCommands(cmds: allRenderCommands, renderInvisibleItems: settings.renderInvisibleItems, &members)
 
             let cmdsTypeSyntax = TypeSyntax(stringLiteral: "[\(renderCommandReferences.count) of RenderCommand]")
             members.append(.init(decl: VariableDeclSyntax.init(
@@ -165,10 +165,77 @@ extension ViewMacro {
 // MARK: New render cmds
 extension ViewMacro {
     private static func appendNewRenderCommands(
-        cmds: [RenderCommand],
+        cmds: [(RenderCommand, ViewNode)],
+        renderInvisibleItems: Bool,
         _ members: inout MemberBlockItemListSyntax
-    ) throws {
-        var renderFuncDecl = FunctionDeclSyntax(
+    ) {
+        var genericCommands = [String]()
+        for (i, (cmd, node)) in cmds.enumerated() {
+            var leadingTrivia:Trivia
+            if node.customName != nil {
+                leadingTrivia = "/* \(node.name)\n*/\n"
+            } else {
+                leadingTrivia = "// \(node.name)\n"
+            }
+
+            var isRendered = true
+            if renderInvisibleItems || cmd.color.3 > 0 { // alpha/opacity is greater than zero
+            } else {
+                isRendered = false
+                leadingTrivia += "//"
+            }
+
+            let variableName:PatternSyntax = "_new\(raw: i)"
+            switch cmd {
+            case .rect(let frame, let radius, let color):
+                // TODO: handle radius
+                let vertices = frame.vertices
+                members.append(.init(decl: DeclSyntax(VariableDeclSyntax(
+                    leadingTrivia: leadingTrivia,
+                    modifiers: [
+                        .init(name: .keyword(.static))
+                    ],
+                    .let,
+                    name: variableName,
+                    initializer: .init(value: ExprSyntax("RenderInlineVertices(vertices: \(raw: vertices.indices.map({ vertices[$0] })), color: \(raw: color))"))
+                ))))
+            case .text(let text, let x, let y, let color):
+                let new = RenderText(text: text, x: x, y: y, color: color)
+                members.append(.init(decl: DeclSyntax(VariableDeclSyntax(
+                    leadingTrivia: leadingTrivia,
+                    modifiers: [
+                        .init(name: .keyword(.static))
+                    ],
+                    .let,
+                    name: variableName,
+                    initializer: .init(value: ExprSyntax("\(raw: new)"))
+                ))))
+            case .textVertices(let vertices, let color):
+                members.append(.init(decl: DeclSyntax(VariableDeclSyntax(
+                    leadingTrivia: leadingTrivia,
+                    modifiers: [
+                        .init(name: .keyword(.static))
+                    ],
+                    .let,
+                    name: variableName,
+                    initializer: .init(value: ExprSyntax("RenderInlineVertices(vertices: \(raw: vertices), color: \(raw: color))"))
+                ))))
+            }
+            if isRendered {
+                genericCommands.append("Self.\(variableName.description)")
+            }
+        }
+        let viewDecl = VariableDeclSyntax(
+            modifiers: [
+                .init(name: .keyword(.static))
+            ],
+            .let,
+            name: "_view",
+            initializer: .init(value: ExprSyntax("RenderView(commands: (\n\(raw: genericCommands.joined(separator: ",\n"))\n))"))
+        )
+        members.append(.init(decl: DeclSyntax(viewDecl)))
+
+        let renderFuncDecl = FunctionDeclSyntax(
             modifiers: [
                 .init(name: .keyword(.public))
             ],
@@ -176,23 +243,8 @@ extension ViewMacro {
             signature: .init(parameterClause: .init(parameters: [
                 .init(firstName: "renderer", type: TypeSyntax("borrowing some RendererProtocol & ~Copyable"))
             ])),
-            body: .init(statements: [])
+            body: .init(statements: [.init(item: .expr(ExprSyntax("Self._view.render(renderer: renderer)")))])
         )
-        for (i, cmd) in cmds.enumerated() {
-            let variableName = "_new\(i)"
-            switch cmd {
-            case .rect(let frame, let radius, let color):
-                // TODO: handle radius
-                let vertices = frame.vertices
-                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = RenderInlineVertices(vertices: \(raw: vertices.indices.map({ vertices[$0] })), color: \(raw: color))"))))
-            case .text(let text, let x, let y, let color):
-                let new = RenderText(text: text, x: x, y: y, color: color)
-                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = \(raw: new)"))))
-            case .textVertices(let vertices, let color):
-                try members.append(.init(decl: DeclSyntax(VariableDeclSyntax("static let \(raw: variableName) = RenderInlineVertices(vertices: \(raw: vertices), color: \(raw: color))"))))
-            }
-            renderFuncDecl.body!.statements.append(.init(item: .expr(ExprSyntax("renderer.render(\(raw: "Self." + variableName))"))))
-        }
         members.append(.init(decl: DeclSyntax(renderFuncDecl)))
     }
 }
