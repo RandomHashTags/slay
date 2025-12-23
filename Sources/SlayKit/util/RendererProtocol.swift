@@ -12,8 +12,16 @@ public protocol RendererProtocol: Sendable, ~Copyable {
         _ cmd: RenderCommand
     )
 
+    func render(
+        _ cmd: RenderRectangle
+    )
+
     func render<let count: Int>(
         _ cmd: RenderInlineVertices<count>
+    )
+
+    func render(
+        _ cmd: RenderVertices
     )
 
     //mutating func end() -> [RenderCommand]

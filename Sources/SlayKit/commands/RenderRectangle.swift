@@ -15,6 +15,6 @@ public struct RenderRectangle: RenderCommandProtocol {
     }
 
     public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
-        // TODO: fix
+        renderer.render(self)
     }
 }

@@ -77,8 +77,17 @@ extension SDL2Renderer {
 }
 
 extension SDL2Renderer {
+    public func render(
+        _ cmd: RenderRectangle
+    ) {
+    }
+
     public func render<let count: Int>(
         _ cmd: RenderInlineVertices<count>
+    ) {
+    }
+    public func render(
+        _ cmd: RenderVertices
     ) {
     }
 }

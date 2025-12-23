@@ -12,6 +12,6 @@ public struct RenderVertices: RenderCommandProtocol {
     }
 
     public func render(renderer: borrowing some RendererProtocol & ~Copyable) {
-        // TODO: fix
+        renderer.render(self)
     }
 }

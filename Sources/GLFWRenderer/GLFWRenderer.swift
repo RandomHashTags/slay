@@ -118,8 +118,20 @@ extension GLFWRenderer {
 
 // MARK: Extensions
 extension GLFWRenderer {
+    public func render(
+        _ cmd: RenderRectangle
+    ) {
+        rectRenderer.draw(cmd)
+    }
+
     public func render<let count: Int>(
         _ cmd: RenderInlineVertices<count>
+    ) {
+        rectRenderer.draw(cmd)
+    }
+
+    public func render(
+        _ cmd: RenderVertices
     ) {
         rectRenderer.draw(cmd)
     }
